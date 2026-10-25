@@ -1,0 +1,800 @@
+/* =====================================================================
+   AnyToken - Icon & Emoji Picker Skin
+   ===================================================================== */
+
+.icon-picker-container {
+  display: flex;
+  flex-direction: column;
+  background: var(--well-bg, rgba(217, 217, 217, 0.45));
+  border: 1px solid var(--well-border, rgba(125, 107, 66, 0.25));
+  box-shadow: var(--well-shadow, inset 0 1px 2px rgba(0,0,0,0.12));
+  border-radius: var(--app-radius-sm, 10px);
+  overflow: hidden;
+  width: 100%;
+}
+
+/* 1. Header Tab Bar */
+.icon-picker-tab-bar {
+  display: flex;
+  background: var(--card-bg-elevated, #FDFCF7);
+  border-bottom: 1px solid var(--well-border, rgba(125, 107, 66, 0.22));
+  padding: 0.35rem 0.5rem 0;
+  gap: 0.35rem;
+}
+
+.icon-picker-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.38rem 0.75rem;
+  font-family: 'Merge One', system-ui, sans-serif;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-muted, #8E7D53);
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-top-left-radius: var(--app-radius-sm, 7px);
+  border-top-right-radius: var(--app-radius-sm, 7px);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.icon-picker-tab-btn:hover {
+  color: var(--text-primary, #5A4A28);
+  background: rgba(125, 107, 66, 0.08);
+}
+
+.icon-picker-tab-btn.is-active {
+  color: var(--text-primary, #5A4A28);
+  background: var(--well-bg, rgba(217, 217, 217, 0.45));
+  border-color: var(--well-border, rgba(125, 107, 66, 0.25));
+  border-bottom: 1px solid transparent;
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.tab-badge-pill {
+  font-size: 0.62rem;
+  font-weight: 700;
+  background: var(--accent-gold, #d97706);
+  color: #ffffff;
+  padding: 0.1rem 0.35rem;
+  border-radius: 10px;
+  line-height: 1;
+}
+
+/* 2. Tab Content Container */
+.icon-picker-tab-content {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-height: 380px;
+  overflow-y: auto;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.emoji-tab-content {
+  max-height: none;
+  padding: 0.6rem 0.75rem;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* Quick Picks Favorites Bar */
+.icon-quick-picks-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.45);
+  padding: 0.35rem 0.5rem;
+  border-radius: var(--app-radius-sm, 6px);
+  border: 1px solid var(--well-border, rgba(125, 107, 66, 0.18));
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.quick-picks-label {
+  font-family: 'Merge One', system-ui, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted, #8E7D53);
+  white-space: nowrap;
+}
+
+.quick-picks-scroll {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding: 0.05rem 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.quick-tile {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-picker-full-library-wrap {
+  width: 100%;
+  max-width: 100%;
+  border-radius: var(--app-radius-sm, 8px);
+  overflow: hidden;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Emoji Library Toolbar (Switch between Native Fast and Twemoji Web) */
+.emoji-library-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.32rem 0.55rem;
+  background: var(--card-bg-elevated, #FDFCF7);
+  border: 1px solid var(--well-border, rgba(125, 107, 66, 0.22));
+  border-bottom: none;
+  border-top-left-radius: var(--app-radius-sm, 8px);
+  border-top-right-radius: var(--app-radius-sm, 8px);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.library-toolbar-label {
+  font-family: 'Merge One', system-ui, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted, #8E7D53);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.emoji-style-toggle-btn {
+  font-family: 'Merge One', system-ui, sans-serif;
+  font-size: 0.64rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--app-radius-sm, 4px);
+  background: var(--well-bg, rgba(217, 217, 217, 0.52));
+  border: 1px solid var(--well-border, rgba(125, 107, 66, 0.25));
+  color: var(--text-primary, #5A4A28);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.emoji-style-toggle-btn:hover {
+  background: var(--card-bg, #ffffff);
+  border-color: var(--accent-gold, #d97706);
+  color: var(--accent-gold-dark, #b45309);
+}
+
+/* Emoji Placeholder Skeleton & Spinner */
+.emoji-picker-placeholder {
+  width: 100%;
+  height: 290px;
+  background: var(--card-bg-elevated, #FDFCF7);
+  border: 1px solid var(--well-border, rgba(125, 107, 66, 0.22));
+  border-radius: 0 0 var(--app-radius-sm, 8px) var(--app-radius-sm, 8px);
+  padding: 0.75rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.emoji-skeleton-search {
+  width: 100%;
+  height: 32px;
+  border-radius: var(--app-radius-sm, 6px);
+  background: linear-gradient(90deg, rgba(125, 107, 66, 0.08) 25%, rgba(125, 107, 66, 0.16) 50%, rgba(125, 107, 66, 0.08) 75%);
+  background-size: 200% 100%;
+  animation: skeletonPulse 1.4s ease-in-out infinite;
+}
+
+.emoji-skeleton-categories {
+  display: flex;
+  gap: 0.4rem;
+  overflow: hidden;
+}
+
+.emoji-skeleton-cat-pill {
+  width: 32px;
+  height: 22px;
+  border-radius: var(--app-radius-sm, 4px);
+  background: rgba(125, 107, 66, 0.09);
+  flex-shrink: 0;
+}
+
+.emoji-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
+  gap: 0.35rem;
+  flex: 1;
+  overflow: hidden;
+  opacity: 0.6;
+}
+
+.emoji-skeleton-cell {
+  height: 30px;
+  border-radius: var(--app-radius-sm, 6px);
+  background: linear-gradient(90deg, rgba(125, 107, 66, 0.06) 25%, rgba(125, 107, 66, 0.14) 50%, rgba(125, 107, 66, 0.06) 75%);
+  background-size: 200% 100%;
+  animation: skeletonPulse 1.4s ease-in-out infinite;
+}
+
+.emoji-spinner-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: rgba(253, 252, 247, 0.85);
+  backdrop-filter: blur(2px);
+  z-index: 10;
+}
+
+.emoji-spinnerText {
+  font-family: 'Merge One', system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-primary, #5A4A28);
+  letter-spacing: 0.02em;
+}
+
+@keyframes skeletonPulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.icon-picker-full-library-wrap .EmojiPickerReact {
+  --epr-bg-color: #faf8f5 !important;
+  --epr-category-label-bg-color: #f2eee6 !important;
+  --epr-text-color: var(--text-primary, #5A4A28) !important;
+  --epr-hover-bg-color: rgba(245, 158, 11, 0.16) !important;
+  --epr-focus-bg-color: rgba(245, 158, 11, 0.25) !important;
+  --epr-search-border-color: rgba(125, 107, 66, 0.25) !important;
+  --epr-search-input-bg-color: #ffffff !important;
+  border: 1px solid var(--well-border, rgba(125, 107, 66, 0.22)) !important;
+  border-radius: 0 0 var(--app-radius-sm, 8px) var(--app-radius-sm, 8px) !important;
+  box-shadow: none !important;
+  font-family: 'Twemoji Country Flags', 'Merge One', system-ui, -apple-system, sans-serif !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.icon-picker-full-library-wrap .EmojiPickerReact img {
+  content-visibility: auto;
+  contain-intrinsic-size: 30px 30px;
+}
+
+/* Search & Direct Input Row */
+.icon-picker-search-row,
+.icon-custom-direct-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.icon-search-input-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 140px;
+  display: flex;
+  align-items: center;
+}
+
+.icon-search-icon {
+  position: absolute;
+  left: 0.55rem;
+  color: var(--text-muted, #8E7D53);
+  pointer-events: none;
+}
+
+.icon-search-input {
+  width: 100%;
+  padding-left: 1.8rem !important;
+  font-size: 0.75rem !important;
+  height: 28px !important;
+}
+
+.icon-search-clear {
+  position: absolute;
+  right: 0.45rem;
+  background: transparent;
+  border: none;
+  font-size: 0.7rem;
+  color: var(--text-muted, #8E7D53);
+  cursor: pointer;
+  padding: 0.2rem;
+}
+
+.icon-custom-direct-form {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.icon-direct-input {
+  width: 130px;
+  font-size: 0.75rem !important;
+  height: 28px !important;
+  padding: 0.2rem 0.45rem !important;
+}
+
+/* Category Filter Chips */
+.icon-category-chips-scroll {
+  display: flex;
+  gap: 0.3rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  scrollbar-width: thin;
+}
+
+.category-chip {
+  flex-shrink: 0;
+  font-family: 'Merge One', system-ui, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 12px;
+  background: var(--card-bg-elevated, #FDFCF7);
+  border: 1px solid var(--well-border, rgba(125, 107, 66, 0.2));
+  color: var(--text-muted, #8E7D53);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.category-chip:hover {
+  color: var(--text-primary, #5A4A28);
+  border-color: var(--accent-gold, #d97706);
+}
+
+.category-chip.active {
+  background: var(--accent-gold-grad, linear-gradient(180deg, #fef08a 0%, #f59e0b 100%));
+  color: #78350f;
+  border-color: var(--accent-gold, #d97706);
+  font-weight: 700;
+}
+
+/* Emoji Scroll Area & Section */
+.icon-emoji-scroll-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.category-section-header {
+  font-family: 'Merge One', system-ui, sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-title, #7D6B42);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 0.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Tiles Grid */
+.icon-tiles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+  gap: 0.35rem;
+}
+
+.icon-tiles-grid.local-grid {
+  grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+}
+
+.icon-tile-btn {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card-bg-elevated, #FDFCF7);
+  border: 1px solid var(--well-border, rgba(125, 107, 66, 0.25));
+  border-bottom: 2px solid rgba(125, 107, 66, 0.35);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  border-radius: var(--app-radius-sm, 6px);
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+  user-select: none;
+}
+
+.icon-tile-btn:hover {
+  transform: scale(1.08);
+  border-color: var(--accent-gold, #d97706);
+  box-shadow: 0 2px 5px rgba(217, 119, 6, 0.25);
+  z-index: 1;
+}
+
+.icon-tile-btn.is-selected {
+  border: 1.5px solid var(--accent-gold, #d97706);
+  border-bottom: 2.5px solid var(--accent-gold-dark, #b45309);
+  background: #fef9c3;
+  box-shadow: 0 0 8px rgba(217, 119, 6, 0.35);
+}
+
+.icon-tile-emoji {
+  font-size: 1.25rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-tile-thumb {
+  width: 82% !important;
+  height: 82% !important;
+  object-fit: contain !important;
+  border-radius: 4px;
+}
+
+.icon-tile-check {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: var(--accent-gold, #d97706);
+  color: #ffffff;
+  border-radius: 50%;
+  padding: 1px;
+}
+
+.icon-tile-delete-btn {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #ef4444;
+  color: #ffffff;
+  border: none;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+}
+
+.icon-tile-btn:hover .icon-tile-delete-btn {
+  display: flex;
+}
+
+/* Tab 2: Local Files Dropzone */
+.icon-dropzone {
+  border: 2px dashed var(--well-border, rgba(125, 107, 66, 0.35));
+  border-radius: var(--app-radius-sm, 8px);
+  background: rgba(255, 255, 255, 0.4);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.icon-dropzone:hover,
+.icon-dropzone.is-dragging {
+  border-color: var(--accent-gold, #d97706);
+  background: rgba(254, 240, 138, 0.25);
+  transform: scale(1.01);
+}
+
+.dropzone-icon {
+  color: var(--accent-gold, #d97706);
+}
+
+.dropzone-text {
+  font-size: 0.78rem;
+  color: var(--text-primary, #5A4A28);
+}
+
+.dropzone-sub {
+  font-size: 0.68rem;
+  color: var(--text-muted, #8E7D53);
+}
+
+.folder-action-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.folder-toolbar-hint {
+  font-family: 'Merge One', system-ui, sans-serif;
+  font-size: 0.68rem;
+  color: var(--text-muted, #8E7D53);
+  margin-left: auto;
+}
+
+.folder-filter-bar {
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  scrollbar-width: thin;
+}
+
+.local-folder-group {
+  margin-bottom: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.folder-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.2rem 0.25rem 0.35rem;
+  border-bottom: 1px solid var(--well-border, rgba(125, 107, 66, 0.18));
+}
+
+.folder-group-title {
+  font-family: 'Merge One', system-ui, sans-serif;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-title, #7D6B42);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.folder-count-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted, #8E7D53);
+}
+
+.folder-delete-btn {
+  background: transparent;
+  border: none;
+  font-family: 'Merge One', system-ui, sans-serif;
+  font-size: 0.65rem;
+  color: #ef4444;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  transition: all 0.12s ease;
+}
+
+.folder-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.icon-empty-library {
+  padding: 0.8rem;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--text-muted, #8E7D53);
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: var(--app-radius-sm, 6px);
+  border: 1px dashed rgba(125, 107, 66, 0.2);
+}
+
+/* Tab 3: Web Link Section */
+.url-input-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.url-field-label {
+  font-family: 'Merge One', system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-title, #7D6B42);
+}
+
+.url-input-row {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  position: relative;
+}
+
+.url-input-icon {
+  position: absolute;
+  left: 0.55rem;
+  color: var(--text-muted, #8E7D53);
+  pointer-events: none;
+}
+
+.url-input-field {
+  flex: 1;
+  padding-left: 1.8rem !important;
+  font-size: 0.76rem !important;
+}
+
+.url-preview-card {
+  padding: 0.5rem;
+  border-radius: var(--app-radius-sm, 6px);
+  background: var(--card-bg-elevated, #FDFCF7);
+  border: 1px solid var(--well-border, rgba(125, 107, 66, 0.2));
+}
+
+.url-status-msg {
+  font-size: 0.72rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.url-valid-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.url-preview-thumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.url-preview-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.url-valid-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.status-badge-success {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #15803d;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.url-domain-hint {
+  font-size: 0.68rem;
+  color: var(--text-muted, #8E7D53);
+}
+
+/* 4. Bottom Selection Footer Bar */
+.icon-picker-footer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem 0.75rem;
+  background: var(--card-bg-elevated, #FDFCF7);
+  border-top: 1px solid var(--well-border, rgba(125, 107, 66, 0.22));
+}
+
+.current-selection-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.footer-label {
+  font-family: 'Merge One', system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted, #8E7D53);
+}
+
+.selection-preview-box {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--app-radius-sm, 5px);
+  background: rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--well-border, rgba(125, 107, 66, 0.3));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.selection-thumb {
+  width: 22px !important;
+  height: 22px !important;
+  font-size: 1.15rem !important;
+  object-fit: contain !important;
+}
+
+.selection-name-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--text-primary, #5A4A28);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.footer-hint {
+  font-size: 0.68rem;
+  color: var(--text-muted, #8E7D53);
+  font-weight: 600;
+}
+
+/* Universal Image Display Component Class */
+.app-icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.app-icon-emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* 2D Panel Icon Preview Card */
+.panel-header-preview-box {
+  background: var(--card-bg, #F1F0E4);
+  border: 1px solid var(--card-border, rgba(125, 107, 66, 0.28));
+  border-radius: var(--app-radius-sm, 8px);
+  padding: 0.6rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.panel-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.panel-preview-title {
+  font-family: 'Merge One', system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary, #5A4A28);
+  background: var(--well-bg, rgba(217, 217, 217, 0.52));
+  border: 1px solid var(--well-border, rgba(125, 107, 66, 0.25));
+  border-radius: var(--app-radius-sm, 6px);
+  padding: 0.25rem 0.65rem;
+  flex: 1;
+}

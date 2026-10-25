@@ -1,0 +1,31 @@
+{
+  "$schema": "https://dev.twitch.tv/docs/extensions/schema.json",
+  "name": "AnyToken",
+  "version": "1.0.0",
+  "author": "Tokenpile",
+  "description": "Interactive 3D stream racing, viewer token customizer, and live bet slip with Twitch Extension PubSub.",
+  "views": {
+    "panel": {
+      "viewer_url": "panel.html",
+      "height": 500,
+      "can_link_external_content": false
+    },
+    "mobile": {
+      "viewer_url": "viewer.html"
+    },
+    "config": {
+      "viewer_url": "config.html",
+      "can_link_external_content": false
+    },
+    "live_config": {
+      "viewer_url": "config.html"
+    },
+    "video_overlay": {
+      "viewer_url": "index.html?obs=1",
+      "can_link_external_content": false
+    }
+  },
+  "privacy_policy_url": "https://github.com/",
+  "whitelisted_config_urls": [],
+  "whitelisted_panel_urls": []
+}

@@ -1,0 +1,1008 @@
+/* =========================================================================
+   AnyToken / Tokenpile - Contest Odds Bar Skin
+   Modular skin component for src/styles/Default/
+   ========================================================================= */
+
+.contest-odds-bar {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 1rem 0.65rem;
+  background: var(--card-bg, #F1F0E4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.5px solid var(--card-border, rgba(125, 107, 66, 0.25));
+  border-radius: var(--app-radius, 12px);
+  gap: 0.55rem;
+  z-index: 40;
+  box-shadow: var(--card-shadow);
+  position: relative;
+  overflow: visible !important;
+  color: var(--text-primary, #5A4A28);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Diagonal Gold Dopamine Shine Sweep */
+.has-shine-sweep::after {
+  content: '';
+  position: absolute;
+  top: -60%;
+  left: -70%;
+  width: 45%;
+  height: 220%;
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      rgba(251, 191, 36, 0.65),
+      rgba(255, 255, 255, 0.3),
+      transparent);
+  transform: rotate(25deg);
+  animation: shineSweepAnim 1.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  pointer-events: none;
+  z-index: 50;
+}
+
+@keyframes shineSweepAnim {
+  0% {
+    left: -70%;
+  }
+
+  100% {
+    left: 170%;
+  }
+}
+
+/* Header Container of Odds Bar */
+.odds-header-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: 100%;
+}
+
+/* Row 1: Expanded Race Title Bar + Search Filter */
+.odds-top-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.odds-title-input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.odds-icon-box,
+.odds-icon-btn {
+  width: 32px;
+  height: 30px;
+  min-width: 32px;
+  padding: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: var(--app-radius-sm, 7px);
+}
+
+.odds-editable-title-input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  background: var(--well-bg, rgba(217, 217, 217, 0.52));
+  border: 1px solid var(--well-border, rgba(125, 107, 66, 0.25));
+  box-shadow: var(--well-shadow);
+  border-radius: var(--app-radius-sm, 6px);
+  font-family: var(--font-family-display, 'Merge One', system-ui, sans-serif);
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--text-primary, #5A4A28);
+  padding: 0.28rem 0.65rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.odds-editable-title-input:hover,
+.odds-editable-title-input:focus {
+  background: #ffffff;
+  border-color: var(--accent-green, #48bc00);
+  box-shadow: 0 0 10px rgba(72, 188, 0, 0.25);
+}
+
+/* Row 2: Pot Readout next to Favourite Bar & Runners */
+.odds-meta-subrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  width: 100%;
+  padding-top: 0.1rem;
+}
+
+.odds-meta-left-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.odds-popover-anchor {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  z-index: 100;
+}
+
+.odds-pot-capsule-group {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.odds-pot-capsule {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--well-bg, rgba(217, 217, 217, 0.52));
+  border: 1px solid var(--well-border, rgba(125, 107, 66, 0.25));
+  box-shadow: var(--well-shadow);
+  border-radius: var(--app-radius-sm, 6px);
+  padding: 0.2rem 0.55rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.odds-pot-capsule:hover {
+  background: var(--card-bg-elevated, #FDFCF7);
+  border-color: var(--accent-gold, #d97706);
+}
+
+.pot-seeded-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0.35));
+  border: 1px solid rgba(217, 119, 6, 0.4);
+  color: #92400e;
+  font-size: 0.68rem;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 0.05rem 0.35rem;
+  margin-left: 0.2rem;
+}
+
+/* Unified Action Buttons: Seed Pot & House */
+.odds-seed-pot-btn,
+.odds-house-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  font-family: var(--font-family-display, 'Merge One', system-ui, sans-serif);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.22rem 0.58rem;
+  border-radius: var(--app-radius-sm, 6px);
+  background: var(--card-bg-elevated, linear-gradient(180deg, #FFFFFF 0%, #EBE8DF 100%));
+  border: 1px solid var(--card-border, rgba(125, 107, 66, 0.28));
+  border-bottom: 2px solid var(--well-border, rgba(125, 107, 66, 0.45));
+  box-shadow: 0 1px 2px rgba(90, 74, 40, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  color: var(--text-primary, #5A4A28);
+  cursor: pointer;
+  transition: all 0.16s ease;
+  white-space: nowrap;
+  user-select: none;
+  line-height: 1.2;
+}
+
+.odds-seed-pot-btn:hover,
+.odds-house-btn:hover {
+  background: #ffffff;
+  color: #382d15;
+  border-color: rgba(125, 107, 66, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(90, 74, 40, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.odds-seed-pot-btn:active,
+.odds-house-btn:active {
+  transform: translateY(1px);
+  border-bottom-width: 1.5px;
+}
+
+.odds-seed-pot-btn.is-active,
+.odds-house-btn.is-active {
+  background: var(--accent-gold-grad, linear-gradient(180deg, #fef3c7 0%, #fde68a 100%)) !important;
+  border-color: var(--accent-gold, #d97706) !important;
+  border-bottom: 2px solid var(--accent-gold-dark, #b45309) !important;
+  color: #78350f !important;
+  box-shadow: 0 1px 3px rgba(217, 119, 6, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+.odds-seed-pot-btn svg {
+  color: #d97706;
+  flex-shrink: 0;
+}
+
+.odds-seed-pot-btn.is-active svg {
+  color: #78350f;
+}
+
+.odds-seed-popover,
+.odds-house-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  bottom: auto;
+  left: 0;
+  z-index: 1000;
+  background: var(--card-bg-elevated, #ffffff);
+  border: 1.5px solid var(--accent-gold, #f59e0b);
+  border-radius: var(--app-radius-sm, 8px);
+  padding: 0.65rem 0.75rem;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.32), 0 3px 10px rgba(217, 119, 6, 0.22);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  animation: fadeIn 0.15s ease;
+}
+
+.odds-seed-popover {
+  width: 260px;
+}
+
+.odds-house-popover {
+  width: 290px;
+}
+
+/* Speech bubble arrow pointing UP towards the button */
+.odds-seed-popover::after,
+.odds-house-popover::after {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  top: auto;
+  left: 20px;
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent transparent var(--accent-gold, #f59e0b) transparent;
+}
+
+.seed-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.seed-popover-close {
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--text-muted, #8E7D53);
+  cursor: pointer;
+  padding: 0 0.2rem;
+}
+
+.seed-popover-close:hover {
+  color: var(--text-primary, #5A4A28);
+}
+
+.seed-popover-desc {
+  font-size: 0.7rem;
+  color: var(--text-muted, #8E7D53);
+  line-height: 1.3;
+}
+
+.seed-popover-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.seed-chip-btn {
+  font-family: var(--font-family-display, 'Merge One', system-ui, sans-serif);
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.18rem 0.45rem;
+  background: var(--well-bg, rgba(217, 217, 217, 0.4));
+  border: 1px solid var(--well-border, rgba(125, 107, 66, 0.25));
+  border-radius: var(--app-radius-sm, 4px);
+  color: var(--text-primary, #5A4A28);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.seed-chip-btn:hover,
+.seed-chip-btn.is-active {
+  background: var(--accent-gold, #fde68a);
+  border-color: #d97706;
+  color: #78350f;
+  transform: translateY(-1px);
+}
+
+.seed-popover-custom-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.1rem;
+}
+
+.seed-custom-input {
+  flex: 1;
+  background: var(--well-bg, rgba(217, 217, 217, 0.52));
+  border: 1px solid var(--well-border, rgba(125, 107, 66, 0.25));
+  border-radius: var(--app-radius-sm, 4px);
+  padding: 0.2rem 0.45rem;
+  font-family: var(--font-family-display, 'Merge One', system-ui, sans-serif);
+  font-size: 0.74rem;
+  color: var(--text-primary, #5A4A28);
+  outline: none;
+}
+
+.seed-custom-input:focus {
+  border-color: var(--accent-gold, #d97706);
+  background: #ffffff;
+}
+
+.seed-custom-submit {
+  font-family: var(--font-family-display, 'Merge One', system-ui, sans-serif);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.22rem 0.6rem;
+  background: var(--accent-gold, #d97706);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--app-radius-sm, 4px);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.seed-custom-submit:hover:not(:disabled) {
+  background: #b45309;
+}
+
+.seed-custom-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pot-capsule-label {
+  color: var(--text-muted, #8E7D53);
+  font-family: var(--font-family-display, 'Merge One', system-ui, sans-serif);
+  font-weight: 600;
+  font-size: 0.72rem;
+}
+
+.pot-capsule-val {
+  font-family: var(--font-family-display, 'Merge One', monospace);
+  font-weight: 700;
+  color: var(--text-primary, #5A4A28);
+  letter-spacing: 0.02em;
+}
+
+.odds-meta-separator {
+  color: var(--text-muted, #8E7D53);
+  font-size: 0.75rem;
+}
+
+.odds-fav-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--accent-gold-grad, rgba(254, 243, 199, 0.85));
+  border: 1px solid var(--accent-gold, rgba(217, 119, 6, 0.35));
+  border-radius: var(--app-radius-sm, 6px);
+  padding: 0.2rem 0.55rem;
+  font-size: 0.75rem;
+}
+
+.fav-label {
+  color: #b45309;
+  font-family: var(--font-family-display, 'Merge One', system-ui, sans-serif);
+  font-weight: 700;
+  font-size: 0.72rem;
+}
+
+.fav-name {
+  color: #78350f;
+  font-family: var(--font-family-display, 'Merge One', system-ui, sans-serif);
+  font-weight: 700;
+}
+
+.fav-odds-pill {
+  background: var(--accent-gold, #fde68a);
+  border-radius: var(--app-radius-sm, 4px);
+  padding: 0.08rem 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #78350f;
+  font-family: var(--font-family-display, 'Merge One', monospace);
+}
+
+.fav-pct-pill {
+  background: rgba(125, 107, 66, 0.2);
+  border-radius: var(--app-radius-sm, 4px);
+  padding: 0.08rem 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-primary, #5A4A28);
+}
+
+.odds-awaiting-bets {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text-muted, #8E7D53);
+  font-size: 0.72rem;
+  font-family: var(--font-family-display, 'Merge One', system-ui, sans-serif);
+}
+
+.odds-meta-right-group {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.house-btn-emoji {
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.house-btn-name {
+  font-family: var(--font-family-display, 'Merge One', system-ui, sans-serif);
+  font-weight: 700;
+  color: inherit;
+}
+
+.house-btn-amount {
+  font-family: var(--font-family-display, 'Merge One', monospace);
+  font-weight: 700;
+  color: #92400e;
+  background: rgba(245, 158, 11, 0.22);
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+.odds-house-btn.is-active .house-btn-amount {
+  background: rgba(180, 83, 9, 0.25);
+  color: #451a03;
+}
+
+/* House Popover Form Styles */
+.house-popover-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.house-popover-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.house-popover-label {
+  font-family: var(--font-family-display, 'Merge One', system-ui, sans-serif);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-title, #7D6B42);
+}
+
+.house-popover-input {
+  background: var(--well-bg, rgba(217, 217, 217, 0.52));
+  border: 1px solid var(--well-border, rgba(125, 107, 66, 0.25));
+  border-radius: var(--app-radius-sm, 4px);
+  padding: 0.24rem 0.45rem;
+  font-family: var(--font-family-display, 'Merge One', system-ui, sans-serif);
+  font-size: 0.74rem;
+  color: var(--text-primary, #5A4A28);
+  outline: none;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.house-popover-input:focus {
+  border-color: var(--accent-gold, #d97706);
+  background: #ffffff;
+}
+
+.house-popover-input.text-center {
+  text-align: center;
+}
+
+.odds-runners-count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-family: var(--font-family-display, 'Merge One', system-ui, sans-serif);
+  font-weight: 700;
+  color: var(--text-title, #7D6B42);
+  background: var(--well-bg, rgba(217, 217, 217, 0.52));
+  border: 1px solid var(--well-border, rgba(125, 107, 66, 0.22));
+  border-radius: var(--app-radius-sm, 6px);
+  padding: 0.22rem 0.52rem;
+  user-select: none;
+}
+
+.odds-runners-count-icon {
+  width: 15px;
+  height: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* Compact Filter Input on Right */
+.odds-filter-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.odds-search-icon {
+  position: absolute;
+  left: 0.55rem;
+  color: var(--text-muted, #8E7D53);
+  pointer-events: none;
+}
+
+.odds-search-input {
+  background: var(--well-bg, rgba(217, 217, 217, 0.52));
+  border: 1px solid var(--well-border, rgba(125, 107, 66, 0.25));
+  box-shadow: var(--well-shadow);
+  color: var(--text-primary, #5A4A28);
+  font-family: var(--font-family-display, 'Merge One', system-ui, sans-serif);
+  font-size: 0.74rem;
+  padding: 0.28rem 1.6rem 0.28rem 1.8rem;
+  border-radius: var(--app-radius-sm, 6px);
+  width: 175px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.odds-search-input:focus {
+  background: #ffffff;
+  border-color: var(--accent-green, #48bc00);
+  box-shadow: 0 0 10px rgba(72, 188, 0, 0.2);
+  width: 210px;
+}
+
+.odds-filter-clear-btn {
+  position: absolute;
+  right: 0.45rem;
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #8E7D53);
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0 0.2rem;
+  line-height: 1;
+}
+
+.odds-filter-clear-btn:hover {
+  color: var(--text-primary, #5A4A28);
+}
+
+/* Proportional Odds Progress Ribbon */
+.odds-ribbon-bar-container {
+  width: 100%;
+}
+
+.odds-ribbon-bar {
+  display: flex;
+  height: 22px;
+  width: 100%;
+  border-radius: var(--app-radius-sm, 6px);
+  background: var(--well-bg, rgba(217, 217, 217, 0.7));
+  border: 1px solid var(--well-border, rgba(125, 107, 66, 0.25));
+  overflow: hidden;
+  box-shadow: var(--well-shadow);
+  position: relative;
+}
+
+.odds-ribbon-slice {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  transition: filter 0.18s ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  border-right: 1px solid rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.odds-ribbon-slice:last-child {
+  border-right: none;
+}
+
+.odds-ribbon-slice:hover {
+  filter: brightness(1.15);
+}
+
+.slice-number {
+  font-family: var(--font-family-mono, 'JetBrains Mono', monospace);
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.slice-number-dim {
+  opacity: 0.75;
+}
+
+.slice-pct {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+  margin-left: 0.2rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.slice-unfunded {
+  opacity: 0.38;
+}
+
+.is-slice-favorite {
+  box-shadow: inset 0 0 12px rgba(251, 191, 36, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+/* Odds Runners Container - Supports Strip Mode and Wrapped Grid Mode */
+.odds-runners-container {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  position: relative;
+  transition: max-height 0.1s ease-out;
+  overflow: hidden;
+}
+
+.odds-runners-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.15rem 0.2rem 0.45rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(125, 107, 66, 0.4) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.odds-runners-strip::-webkit-scrollbar {
+  height: 6px;
+}
+
+.odds-runners-strip::-webkit-scrollbar-track {
+  background: var(--well-bg, rgba(217, 217, 217, 0.35));
+  border-radius: 4px;
+}
+
+.odds-runners-strip::-webkit-scrollbar-thumb {
+  background: rgba(125, 107, 66, 0.38);
+  border-radius: 4px;
+}
+
+.odds-runners-strip::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-gold, #d97706);
+}
+
+.odds-runners-grid-wrap {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.4rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.25rem 0.2rem 0.45rem;
+  scrollbar-width: thin;
+}
+
+.odds-runners-grid-wrap .odds-runner-chip,
+.odds-runner-chip.is-grid-cell {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  flex-shrink: 1;
+  padding: 0.28rem 0.6rem;
+  min-width: 0;
+}
+
+.odds-bar-resize-handle {
+  width: 100%;
+  height: 14px;
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: row-resize;
+  user-select: none;
+  background: transparent;
+  transition: all 0.15s ease;
+  border-radius: var(--app-radius-sm, 4px);
+}
+
+.odds-bar-resize-handle:hover,
+.odds-bar-resize-handle.is-dragging {
+  background: var(--well-bg, rgba(125, 107, 66, 0.15));
+}
+
+.odds-resize-grip-line {
+  width: 38px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--well-border, rgba(125, 107, 66, 0.35));
+  transition: all 0.15s ease;
+}
+
+.odds-bar-resize-handle:hover .odds-resize-grip-line,
+.odds-bar-resize-handle.is-dragging .odds-resize-grip-line {
+  background: var(--accent-gold, #d97706);
+  width: 56px;
+}
+
+.odds-toolbar-btn {
+  font-family: var(--font-family-display, 'Merge One', system-ui, sans-serif);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.26rem 0.58rem;
+  border-radius: var(--app-radius-sm, 6px);
+  background: var(--card-bg-elevated, linear-gradient(180deg, #FFFFFF 0%, #EBE8DF 100%));
+  border: 1px solid var(--card-border, rgba(125, 107, 66, 0.28));
+  border-bottom: 2px solid var(--well-border, rgba(125, 107, 66, 0.45));
+  box-shadow: 0 1px 2px rgba(90, 74, 40, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  color: var(--text-primary, #5A4A28);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.odds-toolbar-btn:hover {
+  background: #ffffff;
+  color: #382d15;
+  border-color: rgba(125, 107, 66, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(90, 74, 40, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.odds-toolbar-btn:active {
+  transform: translateY(1px);
+  border-bottom-width: 1.5px;
+}
+
+.odds-toolbar-btn.is-active {
+  background: var(--accent-gold-grad, linear-gradient(180deg, #fef3c7 0%, #fde68a 100%)) !important;
+  border-color: var(--accent-gold, #d97706) !important;
+  border-bottom: 2px solid var(--accent-gold-dark, #b45309) !important;
+  color: #78350f !important;
+  box-shadow: 0 1px 3px rgba(217, 119, 6, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+.odds-toolbar-btn.is-active svg {
+  stroke: #78350f !important;
+}
+
+.chip-icon-thumb {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.chip-icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.odds-runner-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.22rem 0.55rem;
+  background: var(--card-bg-elevated, #FDFCF7);
+  border: 1px solid var(--well-border, rgba(125, 107, 66, 0.3));
+  border-bottom: 2px solid rgba(125, 107, 66, 0.45);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border-radius: var(--app-radius-sm, 6px);
+  font-family: var(--font-family-display, 'Merge One', system-ui, sans-serif);
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.16s ease;
+  color: var(--text-primary, #5A4A28);
+}
+
+.odds-runner-chip:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(90, 74, 40, 0.15);
+}
+
+.odds-runner-chip:active {
+  transform: translateY(1px);
+  border-bottom-width: 1px;
+}
+
+.chip-entrant-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.chip-odds-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+  margin-left: 0.35rem;
+}
+
+.odds-runners-grid-wrap .chip-entrant-info,
+.odds-runner-chip.is-grid-cell .chip-entrant-info {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.odds-runners-grid-wrap .chip-odds-info,
+.odds-runner-chip.is-grid-cell .chip-odds-info {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.chip-number-badge {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--app-radius-sm, 4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.65rem;
+  color: #ffffff;
+  border-bottom: 1.5px solid rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8);
+  flex-shrink: 0;
+}
+
+.chip-horse-name {
+  font-weight: 700;
+  color: var(--text-primary, #5A4A28);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.odds-runners-grid-wrap .chip-horse-name,
+.odds-runner-chip.is-grid-cell .chip-horse-name {
+  max-width: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.chip-odds-multiplier {
+  font-family: var(--font-family-display, 'Merge One', monospace);
+  font-weight: 700;
+  color: #b45309;
+  font-size: 0.74rem;
+}
+
+.chip-pool-percentage {
+  font-family: var(--font-family-display, 'Merge One', monospace);
+  font-size: 0.65rem;
+  color: var(--text-muted, #8E7D53);
+}
+
+.chip-favorite {
+  border-color: var(--accent-gold, #d97706);
+  background: var(--card-bg-elevated, #fef9c3);
+}
+
+.chip-fav-badge {
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: #78350f;
+  background: var(--accent-gold-grad, #fde68a);
+  border: 1px solid var(--accent-gold, #d97706);
+  padding: 0.08rem 0.28rem;
+  border-radius: var(--app-radius-sm, 3px);
+  letter-spacing: 0.02em;
+}
+
+.chip-locked {
+  opacity: 0.55;
+  filter: grayscale(0.5);
+}
+
+/* ContestOddsBar Podium Badges */
+.odds-runner-chip.chip-podium-1st {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.5) !important;
+}
+
+.odds-runner-chip.chip-podium-2nd {
+  border-color: #94a3b8 !important;
+  box-shadow: 0 0 12px rgba(148, 163, 184, 0.45) !important;
+}
+
+.odds-runner-chip.chip-podium-3rd {
+  border-color: #b45309 !important;
+  box-shadow: 0 0 12px rgba(180, 83, 9, 0.45) !important;
+}
+
+.chip-podium-badge {
+  font-family: var(--font-family-display, 'Merge One', system-ui, sans-serif);
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 4px;
+  line-height: 1;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+.chip-podium-badge.badge-place-1 {
+  background: linear-gradient(180deg, #fef08a 0%, #fbbf24 100%);
+  color: #78350f;
+  border: 1px solid #d97706;
+}
+
+.chip-podium-badge.badge-place-2 {
+  background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+  color: #1e293b;
+  border: 1px solid #94a3b8;
+}
+
+.chip-podium-badge.badge-place-3 {
+  background: linear-gradient(180deg, #fed7aa 0%, #fb923c 100%);
+  color: #451a03;
+  border: 1px solid #b45309;
+}

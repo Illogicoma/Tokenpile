@@ -1,0 +1,67 @@
+/* =========================================================================
+   AnyToken / Tokenpile - Default Theme Design Tokens
+   Users creating custom skins can override any of these variables in their
+   own skin folder (e.g., styles/Scifi/tokens.css)
+   ========================================================================= */
+
+:root {
+  /* Surfaces & Backgrounds */
+  --bg-color: #EDE8DF;
+  --bg-secondary: #E3DDD1;
+  --bg-radial-1: rgba(244, 114, 182, 0.08);
+  --bg-radial-2: rgba(72, 188, 0, 0.06);
+  --bg-radial-3: rgba(251, 191, 36, 0.08);
+
+  /* Panels, Cards & Surfaces */
+  --card-bg: #F1F0E4;
+  --card-bg-elevated: #FDFCF7;
+  --card-border: rgba(125, 107, 66, 0.25);
+  --card-border-hover: rgba(125, 107, 66, 0.45);
+  --card-shadow: 0 4px 18px rgba(90, 74, 40, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
+  --card-shadow-elevated: 0 10px 30px rgba(90, 74, 40, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08);
+
+  /* Inset Wells & Depressed Containers */
+  --well-bg: rgba(217, 217, 217, 0.52);
+  --well-border: rgba(125, 107, 66, 0.22);
+  --well-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.16);
+
+  /* Text Colors */
+
+  --text-primary: #5A4A28;
+  --text-title: #7D6B42;
+  --text-secondary: #7D6B42;
+  --text-muted: #8E7D53;
+  --text-inverse: #FFFFFF;
+
+  /* Theme Accents */
+  --accent-primary: #0284c7;
+  --accent-purple: #9333ea;
+  --accent-gold: #d97706;
+  --accent-gold-grad: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
+  --accent-emerald: #059669;
+  --accent-rose: #e11d48;
+  --accent-green: #48bc00;
+  --accent-green-dark: #339402;
+  --accent-green-grad: linear-gradient(180deg, #51cf00 0%, #3cae02 50%, #2f8c01 100%);
+
+  --glow-cyan: rgba(2, 132, 199, 0.25);
+  --glow-gold: rgba(217, 119, 6, 0.25);
+  --glow-purple: rgba(147, 51, 234, 0.25);
+
+  /* Border Radii */
+  --app-radius-xs: 4px;
+  --app-radius-sm: 8px;
+  --app-radius: 12px;
+  --app-radius-lg: 20px;
+
+  /* Themed Scrollbars */
+  --scrollbar-thumb: rgba(125, 107, 66, 0.38);
+  --scrollbar-thumb-hover: #d97706;
+  --scrollbar-track: rgba(0, 0, 0, 0.04);
+}
+
+/* Universal Themed Scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb, rgba(125, 107, 66, 0.38)) var(--scrollbar-track, transparent);
+}
