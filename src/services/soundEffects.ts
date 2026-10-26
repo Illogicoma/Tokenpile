@@ -9,7 +9,7 @@ class SoundEffectsService {
   private customAudioCache: Map<string, HTMLAudioElement> = new Map();
 
   constructor() {
-    const savedMute = localStorage.getItem('anytoken_sound_muted');
+    const savedMute = localStorage.getItem('TokenPile_sound_muted');
     if (savedMute !== null) {
       this.isMuted = savedMute === 'true';
     }
@@ -32,7 +32,7 @@ class SoundEffectsService {
 
   public setMuted(muted: boolean) {
     this.isMuted = muted;
-    localStorage.setItem('anytoken_sound_muted', String(muted));
+    localStorage.setItem('TokenPile_sound_muted', String(muted));
   }
 
   public getMuted(): boolean {

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   Plus,
   ArrowUpRight,
@@ -21,11 +21,12 @@ import {
   Minus,
   Search
 } from 'lucide-react';
-import type { UserRosterItem, BetOutcome } from '../types/betting';
+import type { UserRosterItem, BetOutcome, TierConfig } from '../types/betting';
 import { IconDisplay } from './IconDisplay';
 import { useAutoScroll } from '../hooks/useAutoScroll';
 import { getPodiumColor } from '../utils/podiumColors';
 import { AnimatedTokenCounter } from './AnimatedTokenCounter';
+import { storageService, DEFAULT_TIER_CONFIGS } from '../services/storageService';
 
 interface UserRosterPanelProps {
   users: UserRosterItem[];
@@ -49,27 +50,27 @@ interface UserRosterPanelProps {
   onUpdateTitle?: (title: string) => void;
   onOpenIconEditor?: () => void;
   isAdmin?: boolean;
+  tokenTiers?: TierConfig[];
 }
 
-const getTierColor = (tokens: number): string => {
-  if (tokens >= 50000) return '#f43f5e'; // Colossal / Rose
-  if (tokens >= 20000) return '#f59e0b'; // Legendary / Amber
-  if (tokens >= 10000) return '#8b5cf6'; // Mythic / Purple
-  if (tokens >= 5000) return '#06b6d4';  // Platinum / Cyan
-  if (tokens >= 2000) return '#eab308';  // Gold
-  if (tokens >= 500) return '#94a3b8';   // Silver
-  return '#10b981';                      // Starter / Emerald Green
+export const getTierInfo = (tokens: number, tiers?: TierConfig[]): { name: string; tint: string; tier: string } => {
+  const activeTiers = tiers && tiers.length > 0 ? tiers : (typeof window !== 'undefined' ? storageService.getTokenTiers() : DEFAULT_TIER_CONFIGS);
+  const sorted = [...activeTiers].sort((a, b) => b.value - a.value);
+  for (const t of sorted) {
+    if (tokens >= t.value) {
+      return { name: t.name, tint: t.tint, tier: t.tier };
+    }
+  }
+  const lowest = sorted[sorted.length - 1];
+  return {
+    name: lowest ? lowest.name : 'Starter',
+    tint: lowest ? lowest.tint : '#10b981',
+    tier: lowest ? lowest.tier : 'base'
+  };
 };
 
-const getTierName = (tokens: number): string => {
-  if (tokens >= 50000) return 'Colossal';
-  if (tokens >= 20000) return 'Legend';
-  if (tokens >= 10000) return 'Mythic';
-  if (tokens >= 5000) return 'Plat';
-  if (tokens >= 2000) return 'Gold';
-  if (tokens >= 500) return 'Silver';
-  return 'Starter';
-};
+export const getTierColor = (tokens: number, tiers?: TierConfig[]): string => getTierInfo(tokens, tiers).tint;
+export const getTierName = (tokens: number, tiers?: TierConfig[]): string => getTierInfo(tokens, tiers).name;
 
 const formatCompactPts = (pts: number): string => {
   if (pts >= 1000000) return `${(pts / 1000000).toFixed(1)}M`;
@@ -99,7 +100,8 @@ export const UserRosterPanel: React.FC<UserRosterPanelProps> = ({
   emoji = '👥',
   onUpdateTitle,
   onOpenIconEditor,
-  isAdmin = true
+  isAdmin = true,
+  tokenTiers
 }) => {
   const [selectedUserOutcomes, setSelectedUserOutcomes] = useState<Record<string, string>>({});
   const [userBetInputs, setUserBetInputs] = useState<Record<string, string>>({});
@@ -111,7 +113,7 @@ export const UserRosterPanel: React.FC<UserRosterPanelProps> = ({
   // Winners Podium state
   const [isPodiumVisible, setIsPodiumVisible] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('anytoken_viewer_podium_visible') === 'true';
+      return localStorage.getItem('TokenPile_viewer_podium_visible') === 'true';
     } catch {
       return false;
     }
@@ -119,7 +121,7 @@ export const UserRosterPanel: React.FC<UserRosterPanelProps> = ({
 
   const [podiumLimit, setPodiumLimit] = useState<number>(() => {
     try {
-      const stored = localStorage.getItem('anytoken_viewer_podium_limit');
+      const stored = localStorage.getItem('TokenPile_viewer_podium_limit');
       if (stored) {
         const parsed = parseInt(stored, 10);
         if (parsed >= 1 && parsed <= 10) return parsed;
@@ -153,21 +155,11 @@ export const UserRosterPanel: React.FC<UserRosterPanelProps> = ({
     return [...baseUsers].sort((a, b) => b.tokens - a.tokens);
   }, [baseUsers]);
 
-  // Auto-reveal podium dock when new race winners arrive
-  const prevWinnersCountRef = useRef<number>(0);
-  useEffect(() => {
-    if (recentWinners.length > 0 && prevWinnersCountRef.current === 0) {
-      setIsPodiumVisible(true);
-      setPodiumMode('race');
-    }
-    prevWinnersCountRef.current = recentWinners.length;
-  }, [recentWinners.length]);
-
   const handleSetPodiumLimit = (count: number) => {
     const clamped = Math.max(1, Math.min(10, count));
     setPodiumLimit(clamped);
     try {
-      localStorage.setItem('anytoken_viewer_podium_limit', String(clamped));
+      localStorage.setItem('TokenPile_viewer_podium_limit', String(clamped));
     } catch { }
   };
 
@@ -175,7 +167,7 @@ export const UserRosterPanel: React.FC<UserRosterPanelProps> = ({
     const next = !isPodiumVisible;
     setIsPodiumVisible(next);
     try {
-      localStorage.setItem('anytoken_viewer_podium_visible', String(next));
+      localStorage.setItem('TokenPile_viewer_podium_visible', String(next));
     } catch { }
   };
 
@@ -218,7 +210,7 @@ export const UserRosterPanel: React.FC<UserRosterPanelProps> = ({
   // Auto-scroll state
   const [isAutoScroll, setIsAutoScroll] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('anytoken_viewers_auto_scroll') === 'true';
+      return localStorage.getItem('TokenPile_viewers_auto_scroll') === 'true';
     } catch {
       return false;
     }
@@ -236,7 +228,7 @@ export const UserRosterPanel: React.FC<UserRosterPanelProps> = ({
     const next = !isAutoScroll;
     setIsAutoScroll(next);
     try {
-      localStorage.setItem('anytoken_viewers_auto_scroll', String(next));
+      localStorage.setItem('TokenPile_viewers_auto_scroll', String(next));
     } catch { }
   };
 
@@ -448,7 +440,6 @@ export const UserRosterPanel: React.FC<UserRosterPanelProps> = ({
           title={isAutoScroll ? "Pause viewer auto-scrolling" : "Enable continuous auto-scrolling across viewers"}
         >
           <Repeat size={11} className={isAutoScroll ? 'spin-slow' : ''} />
-          <span>Auto</span>
         </button>
 
         {/* Expand / Collapse All */}
@@ -835,6 +826,7 @@ export const UserRosterPanel: React.FC<UserRosterPanelProps> = ({
             <ViewerCard
               key={user.id}
               user={user}
+              tokenTiers={tokenTiers}
               isExpanded={expandedUserIds.has(user.id)}
               isSpotlighted={spotlightedUserId === user.id}
               selectedOutcomeId={getSelectedOutcome(user.id)}
@@ -875,6 +867,7 @@ interface ViewerCardProps {
   onQuickPresetBet: (userId: string, amount: number, e: React.MouseEvent) => void;
   onBetClick: (userId: string, e: React.MouseEvent) => void;
   isAdmin?: boolean;
+  tokenTiers?: TierConfig[];
 }
 
 const ViewerCard = React.memo<ViewerCardProps>(({
@@ -893,8 +886,10 @@ const ViewerCard = React.memo<ViewerCardProps>(({
   onQuickPresetBet,
   onBetClick,
   isAdmin = true,
+  tokenTiers,
 }) => {
-  const tierColor = getTierColor(user.tokens);
+  const tier = getTierInfo(user.tokens, tokenTiers);
+  const tierColor = tier.tint;
   const [isEditingPoints, setIsEditingPoints] = useState(false);
   const [editPointsVal, setEditPointsVal] = useState(String(user.tokens));
 
@@ -1101,9 +1096,9 @@ const ViewerCard = React.memo<ViewerCardProps>(({
             <div
               className="viewer-tier-capsule"
               style={{ backgroundColor: tierColor }}
-              title={`Rank Tier: ${getTierName(user.tokens)}`}
+              title={`Rank Tier: ${tier.name}`}
             >
-              {getTierName(user.tokens)}
+              {tier.name}
             </div>
           </div>
         </div>

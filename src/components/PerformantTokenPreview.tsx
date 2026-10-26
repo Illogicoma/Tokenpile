@@ -15,7 +15,7 @@ interface PerformantTokenPreviewProps {
 
 /**
  * High-performance 3D Voxel Coin (256-voxel grid resolution / size = 16):
- * Renders the authentic AnyToken extruded 3D voxel coin with raised metallic rim and vertex colors.
+ * Renders the authentic TokenPile extruded 3D voxel coin with raised metallic rim and vertex colors.
  * Merged into 1 single BufferGeometry (<120 voxels), runs at a rock-solid 60 FPS on mobile!
  */
 const VoxelCoin3D = ({ config }: { config: UserTokenConfig }) => {
@@ -188,11 +188,31 @@ const VoxelCoin3D = ({ config }: { config: UserTokenConfig }) => {
       }
     }
 
-    if (geometries.length === 0) return new THREE.BoxGeometry(1.5, 1.5, rimThickness);
+    if (geometries.length === 0) {
+      baseInnerVoxel.dispose();
+      baseOutlineVoxel.dispose();
+      return new THREE.BoxGeometry(1.5, 1.5, rimThickness);
+    }
+
     const merged = mergeGeometries(geometries, false);
     merged.computeVertexNormals();
+
+    // Clean up temporary constituent voxel geometries from GPU/RAM
+    baseInnerVoxel.dispose();
+    baseOutlineVoxel.dispose();
+    for (let i = 0; i < geometries.length; i++) {
+      geometries[i].dispose();
+    }
+
     return merged;
   }, [emoji, isImg, loadedImage, config.colorTint]);
+
+  // Clean up previous geometry from GPU memory when updated or on unmount
+  useEffect(() => {
+    return () => {
+      geometry.dispose();
+    };
+  }, [geometry]);
 
   useFrame((_, delta) => {
     if (!meshRef.current) return;
@@ -276,7 +296,7 @@ export const PerformantTokenPreview: React.FC<PerformantTokenPreviewProps> = ({
 }) => {
   const [renderMode, setRenderMode] = useState<'3d' | 'lite'>(() => {
     try {
-      const stored = localStorage.getItem('anytoken_preview_mode');
+      const stored = localStorage.getItem('TokenPile_preview_mode');
       if (stored === 'lite' || stored === '3d') return stored;
     } catch { }
     // Auto-detect very low-memory devices (< 3GB RAM)
@@ -290,7 +310,7 @@ export const PerformantTokenPreview: React.FC<PerformantTokenPreviewProps> = ({
     const next = renderMode === '3d' ? 'lite' : '3d';
     setRenderMode(next);
     try {
-      localStorage.setItem('anytoken_preview_mode', next);
+      localStorage.setItem('TokenPile_preview_mode', next);
     } catch { }
   };
 

@@ -17,7 +17,8 @@ import {
   RotateCcw,
   Palette,
   Target,
-  RefreshCw
+  RefreshCw,
+  Coins
 } from 'lucide-react';
 import type {
   RenderEngine,
@@ -342,15 +343,34 @@ export const ViewControlsBar = ({
                 <span>Snap to Track Stage</span>
               </button>
 
-              {/* Toggle Wall Visibility */}
+              {/* Toggle Background Visibility */}
               <button
                 type="button"
-                className={`tray-toggle-btn ${localBucket.hideWalls ? 'active' : ''}`}
-                onClick={() => handleUpdateBucketToggle('hideWalls', !localBucket.hideWalls)}
-                title={localBucket.hideWalls ? "Bucket walls are invisible (OBS transparent ready)" : "Bucket glass walls are visible"}
+                className={`tray-toggle-btn ${(localBucket.backgroundVisible !== undefined ? localBucket.backgroundVisible : !localBucket.hideWalls) ? 'active-amber' : ''}`}
+                onClick={() => {
+                  const current = localBucket.backgroundVisible !== undefined ? localBucket.backgroundVisible : !localBucket.hideWalls;
+                  const next = !current;
+                  handleInstantBucketUpdate({
+                    ...localBucket,
+                    backgroundVisible: next,
+                    hideWalls: !next,
+                  });
+                }}
+                title={(localBucket.backgroundVisible !== undefined ? localBucket.backgroundVisible : !localBucket.hideWalls) ? "Hopper panel background is visible using theme styling" : "Hopper panel background is hidden (transparent overlay ready)"}
               >
-                {localBucket.hideWalls ? <EyeOff size={12} /> : <Eye size={12} />}
-                <span>{localBucket.hideWalls ? 'Walls: Hidden (OBS Ready)' : 'Walls: Visible Glass'}</span>
+                {(localBucket.backgroundVisible !== undefined ? localBucket.backgroundVisible : !localBucket.hideWalls) ? <Eye size={12} /> : <EyeOff size={12} />}
+                <span>{(localBucket.backgroundVisible !== undefined ? localBucket.backgroundVisible : !localBucket.hideWalls) ? 'Background: Visible' : 'Background: Hidden'}</span>
+              </button>
+
+              {/* Toggle Physical Tokens Entirely */}
+              <button
+                type="button"
+                className={`tray-toggle-btn ${localBucket.enableTokens !== false ? 'active-amber' : ''}`}
+                onClick={() => handleUpdateBucketToggle('enableTokens', localBucket.enableTokens === false)}
+                title={localBucket.enableTokens !== false ? "Tokens are enabled in the hopper" : "Tokens are disabled entirely"}
+              >
+                <Coins size={12} color={localBucket.enableTokens !== false ? '#b45309' : '#7D6B42'} />
+                <span>{localBucket.enableTokens !== false ? 'Tokens: Enabled' : 'Tokens: Disabled'}</span>
               </button>
 
               {/* Toggle Live Boundary Guides */}
@@ -748,14 +768,6 @@ export const ViewControlsBar = ({
                   title="Minimal Corner Mode: Clears almost entire screen, leaves only token pile & odds"
                 >
                   Minimal Corner
-                </button>
-                <button
-                  type="button"
-                  className={`segment-btn ${uiMode === 'viewer' ? 'active-amber' : ''}`}
-                  onClick={() => onChangeUiMode('viewer')}
-                  title="Viewer & Mobile Bet Slip: Mobile-first & Twitch panel layout"
-                >
-                  📱 Viewer Slip
                 </button>
               </div>
             </div>

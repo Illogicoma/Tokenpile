@@ -1,5 +1,5 @@
 /* =========================================================================
-   AnyToken / Tokenpile - Contest Odds Bar Skin
+   TokenPile / Tokenpile - Contest Odds Bar Skin
    Modular skin component for src/styles/Default/
    ========================================================================= */
 
@@ -22,6 +22,11 @@
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
+}
+
+.contest-odds-bar.is-cards-hidden {
+  gap: 0.45rem;
+  padding: 0.65rem 1rem 0.65rem;
 }
 
 /* Diagonal Gold Dopamine Shine Sweep */

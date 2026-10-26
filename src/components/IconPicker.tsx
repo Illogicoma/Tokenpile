@@ -62,7 +62,7 @@ export const IconPicker: React.FC<IconPickerProps> = ({
   const [isEmojiPickerReady, setIsEmojiPickerReady] = useState(false);
   const [emojiStyle, setEmojiStyle] = useState<EmojiStyle>(() => {
     try {
-      const saved = localStorage.getItem('anytoken_emoji_style');
+      const saved = localStorage.getItem('TokenPile_emoji_style');
       return saved === 'twitter' ? EmojiStyle.TWITTER : EmojiStyle.NATIVE;
     } catch {
       return EmojiStyle.NATIVE;
@@ -82,7 +82,7 @@ export const IconPicker: React.FC<IconPickerProps> = ({
     const nextStyle = emojiStyle === EmojiStyle.NATIVE ? EmojiStyle.TWITTER : EmojiStyle.NATIVE;
     setEmojiStyle(nextStyle);
     try {
-      localStorage.setItem('anytoken_emoji_style', nextStyle === EmojiStyle.TWITTER ? 'twitter' : 'native');
+      localStorage.setItem('TokenPile_emoji_style', nextStyle === EmojiStyle.TWITTER ? 'twitter' : 'native');
     } catch { }
   };
 

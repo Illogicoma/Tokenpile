@@ -1,52 +1,72 @@
-/* AnyToken - Mobile & Twitch Panel Viewer Mode Styles (Dark & Light Theme) */
+/* TokenPile - Mobile & Twitch Panel Viewer Mode Styles (Dark & Light Theme) */
 
 @keyframes pulseGlowGreen {
-  0%, 100% { box-shadow: 0 0 10px rgba(16, 185, 129, 0.35); }
-  50% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.7); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.7);
+  }
 }
 
 @keyframes pulseGlowAmber {
-  0%, 100% { box-shadow: 0 0 10px rgba(245, 158, 11, 0.35); }
-  50% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.7); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.35);
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.7);
+  }
 }
 
 /* =========================================================================
    SCOPED DESIGN TOKENS (Self-Contained for Viewer Mode)
    ========================================================================= */
 .viewer-mode-root {
-  /* DARK THEME (Default) */
-  --vm-bg: #12141f;
-  --vm-card-bg: rgba(26, 29, 44, 0.85);
-  --vm-card-border: rgba(255, 255, 255, 0.1);
-  --vm-card-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
-  --vm-text-primary: #f8fafc;
-  --vm-text-secondary: #cbd5e1;
-  --vm-text-muted: #94a3b8;
-  --vm-topbar-bg: rgba(18, 20, 31, 0.95);
-  --vm-topbar-border: rgba(255, 255, 255, 0.08);
-  --vm-tab-strip-bg: rgba(12, 14, 22, 0.85);
-  --vm-tab-strip-border: rgba(255, 255, 255, 0.1);
-  --vm-tab-active-bg: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  /* SIGNATURE TOKENPILE PARCHMENT THEME (Default) */
+  --vm-bg: #EDE8DF;
+  --vm-bg-radial: radial-gradient(circle at 15% 15%, rgba(244, 114, 182, 0.08) 0%, transparent 45%),
+                  radial-gradient(circle at 85% 20%, rgba(72, 188, 0, 0.06) 0%, transparent 45%),
+                  #EDE8DF;
+  --vm-card-bg: #F1F0E4;
+  --vm-card-bg-elevated: #FDFCF7;
+  --vm-card-border: rgba(125, 107, 66, 0.25);
+  --vm-card-border-hover: rgba(125, 107, 66, 0.45);
+  --vm-card-shadow: 0 4px 18px rgba(90, 74, 40, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
+  --vm-card-shadow-elevated: 0 10px 30px rgba(90, 74, 40, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08);
+  --vm-text-primary: #5A4A28;
+  --vm-text-secondary: #7D6B42;
+  --vm-text-muted: #8E7D53;
+  --vm-topbar-bg: rgba(241, 240, 228, 0.95);
+  --vm-topbar-border: rgba(125, 107, 66, 0.22);
+  --vm-tab-strip-bg: rgba(217, 217, 217, 0.52);
+  --vm-tab-strip-border: rgba(125, 107, 66, 0.22);
+  --vm-tab-active-bg: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
   --vm-tab-active-text: #ffffff;
-  --vm-tab-active-shadow: 0 2px 8px rgba(217, 119, 6, 0.45);
-  --vm-tab-inactive-text: #94a3b8;
-  --vm-runner-bg: rgba(28, 32, 48, 0.7);
-  --vm-runner-border: rgba(255, 255, 255, 0.08);
-  --vm-runner-hover: rgba(38, 43, 64, 0.9);
-  --vm-runner-selected-bg: rgba(245, 158, 11, 0.15);
-  --vm-runner-selected-border: #f59e0b;
-  --vm-pill-bg: rgba(255, 255, 255, 0.08);
-  --vm-pill-border: rgba(255, 255, 255, 0.14);
-  --vm-tray-bg: rgba(18, 20, 31, 0.97);
-  --vm-tray-border: rgba(255, 255, 255, 0.12);
-  --vm-input-bg: rgba(0, 0, 0, 0.45);
-  --vm-input-border: rgba(255, 255, 255, 0.15);
-  --vm-input-text: #ffffff;
-  --vm-chip-bg: rgba(255, 255, 255, 0.08);
-  --vm-chip-text: #cbd5e1;
-  --vm-chip-border: rgba(255, 255, 255, 0.12);
-  --vm-stat-bg: rgba(28, 32, 48, 0.65);
-  --vm-stat-val: #ffffff;
+  --vm-tab-active-shadow: 0 2px 8px rgba(217, 119, 6, 0.35);
+  --vm-tab-inactive-text: #7D6B42;
+  --vm-runner-bg: #FDFCF7;
+  --vm-runner-border: rgba(125, 107, 66, 0.22);
+  --vm-runner-hover: #FAF8F0;
+  --vm-runner-selected-bg: #FEF9EE;
+  --vm-runner-selected-border: #d97706;
+  --vm-pill-bg: rgba(217, 217, 217, 0.48);
+  --vm-pill-border: rgba(125, 107, 66, 0.25);
+  --vm-tray-bg: rgba(241, 240, 228, 0.98);
+  --vm-tray-border: rgba(125, 107, 66, 0.3);
+  --vm-input-bg: rgba(217, 217, 217, 0.45);
+  --vm-input-border: rgba(125, 107, 66, 0.28);
+  --vm-input-text: #5A4A28;
+  --vm-chip-bg: #FDFCF7;
+  --vm-chip-text: #5A4A28;
+  --vm-chip-border: rgba(125, 107, 66, 0.25);
+  --vm-stat-bg: rgba(217, 217, 217, 0.4);
+  --vm-stat-val: #5A4A28;
 
   width: 100%;
   max-width: 480px;
@@ -55,51 +75,98 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  background: var(--vm-bg);
+  background: var(--vm-bg-radial, var(--vm-bg));
   color: var(--vm-text-primary);
-  font-family: var(--font-family-body, system-ui, -apple-system, sans-serif);
+  font-family: var(--font-family-base, 'Twemoji Country Flags', 'Inter', system-ui, -apple-system, sans-serif);
   position: relative;
   overflow-y: auto !important;
   overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch;
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 40px rgba(90, 74, 40, 0.25);
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* LIGHT THEME OVERRIDES */
+/* LIGHT THEME (Explicit Alias for Parchment Default) */
 .viewer-mode-root.theme-light {
-  --vm-bg: #f5f4ef;
-  --vm-card-bg: #ffffff;
-  --vm-card-border: rgba(0, 0, 0, 0.12);
-  --vm-card-shadow: 0 4px 18px rgba(90, 74, 40, 0.08);
-  --vm-text-primary: #1e293b;
-  --vm-text-secondary: #334155;
-  --vm-text-muted: #64748b;
-  --vm-topbar-bg: rgba(255, 255, 255, 0.95);
-  --vm-topbar-border: rgba(0, 0, 0, 0.08);
-  --vm-tab-strip-bg: #e6e2d8;
-  --vm-tab-strip-border: rgba(0, 0, 0, 0.08);
-  --vm-tab-active-bg: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  --vm-bg: #EDE8DF;
+  --vm-bg-radial: radial-gradient(circle at 15% 15%, rgba(244, 114, 182, 0.08) 0%, transparent 45%),
+                  radial-gradient(circle at 85% 20%, rgba(72, 188, 0, 0.06) 0%, transparent 45%),
+                  #EDE8DF;
+  --vm-card-bg: #F1F0E4;
+  --vm-card-bg-elevated: #FDFCF7;
+  --vm-card-border: rgba(125, 107, 66, 0.25);
+  --vm-card-border-hover: rgba(125, 107, 66, 0.45);
+  --vm-card-shadow: 0 4px 18px rgba(90, 74, 40, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
+  --vm-text-primary: #5A4A28;
+  --vm-text-secondary: #7D6B42;
+  --vm-text-muted: #8E7D53;
+  --vm-topbar-bg: rgba(241, 240, 228, 0.95);
+  --vm-topbar-border: rgba(125, 107, 66, 0.22);
+  --vm-tab-strip-bg: rgba(217, 217, 217, 0.52);
+  --vm-tab-strip-border: rgba(125, 107, 66, 0.22);
+  --vm-tab-active-bg: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
   --vm-tab-active-text: #ffffff;
-  --vm-tab-active-shadow: 0 2px 8px rgba(180, 83, 9, 0.35);
-  --vm-tab-inactive-text: #64748b;
-  --vm-runner-bg: #ffffff;
-  --vm-runner-border: rgba(0, 0, 0, 0.1);
-  --vm-runner-hover: #faf8f5;
-  --vm-runner-selected-bg: #fef3c7;
+  --vm-tab-active-shadow: 0 2px 8px rgba(217, 119, 6, 0.35);
+  --vm-tab-inactive-text: #7D6B42;
+  --vm-runner-bg: #FDFCF7;
+  --vm-runner-border: rgba(125, 107, 66, 0.22);
+  --vm-runner-hover: #FAF8F0;
+  --vm-runner-selected-bg: #FEF9EE;
   --vm-runner-selected-border: #d97706;
-  --vm-pill-bg: rgba(0, 0, 0, 0.06);
-  --vm-pill-border: rgba(0, 0, 0, 0.12);
-  --vm-tray-bg: rgba(255, 255, 255, 0.98);
-  --vm-tray-border: rgba(0, 0, 0, 0.12);
-  --vm-input-bg: #ffffff;
-  --vm-input-border: rgba(0, 0, 0, 0.2);
-  --vm-input-text: #0f172a;
-  --vm-chip-bg: #eae5dc;
-  --vm-chip-text: #1e293b;
-  --vm-chip-border: rgba(0, 0, 0, 0.1);
-  --vm-stat-bg: #ffffff;
-  --vm-stat-val: #0f172a;
+  --vm-pill-bg: rgba(217, 217, 217, 0.48);
+  --vm-pill-border: rgba(125, 107, 66, 0.25);
+  --vm-tray-bg: rgba(241, 240, 228, 0.98);
+  --vm-tray-border: rgba(125, 107, 66, 0.3);
+  --vm-input-bg: rgba(217, 217, 217, 0.45);
+  --vm-input-border: rgba(125, 107, 66, 0.28);
+  --vm-input-text: #5A4A28;
+  --vm-chip-bg: #FDFCF7;
+  --vm-chip-text: #5A4A28;
+  --vm-chip-border: rgba(125, 107, 66, 0.25);
+  --vm-stat-bg: rgba(217, 217, 217, 0.4);
+  --vm-stat-val: #5A4A28;
+}
+
+/* ESPRESSO & GOLD OBSIDIAN THEME (Twitch Dark Mode) */
+.viewer-mode-root.theme-dark {
+  --vm-bg: #181512;
+  --vm-bg-radial: radial-gradient(circle at 15% 15%, rgba(217, 119, 6, 0.08) 0%, transparent 45%),
+                  radial-gradient(circle at 85% 20%, rgba(16, 185, 129, 0.06) 0%, transparent 45%),
+                  #181512;
+  --vm-card-bg: #24201A;
+  --vm-card-bg-elevated: #2C261F;
+  --vm-card-border: rgba(217, 119, 6, 0.25);
+  --vm-card-border-hover: rgba(217, 119, 6, 0.45);
+  --vm-card-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  --vm-card-shadow-elevated: 0 12px 32px rgba(0, 0, 0, 0.6);
+  --vm-text-primary: #FBF8EE;
+  --vm-text-secondary: #D5C8A8;
+  --vm-text-muted: #9E9075;
+  --vm-topbar-bg: rgba(24, 21, 18, 0.96);
+  --vm-topbar-border: rgba(217, 119, 6, 0.2);
+  --vm-tab-strip-bg: rgba(15, 13, 11, 0.65);
+  --vm-tab-strip-border: rgba(217, 119, 6, 0.2);
+  --vm-tab-active-bg: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
+  --vm-tab-active-text: #ffffff;
+  --vm-tab-active-shadow: 0 2px 10px rgba(217, 119, 6, 0.4);
+  --vm-tab-inactive-text: #A89977;
+  --vm-runner-bg: #28241D;
+  --vm-runner-border: rgba(217, 119, 6, 0.2);
+  --vm-runner-hover: #332D24;
+  --vm-runner-selected-bg: rgba(217, 119, 6, 0.22);
+  --vm-runner-selected-border: #fbbf24;
+  --vm-pill-bg: rgba(217, 119, 6, 0.15);
+  --vm-pill-border: rgba(217, 119, 6, 0.25);
+  --vm-tray-bg: rgba(24, 21, 18, 0.98);
+  --vm-tray-border: rgba(217, 119, 6, 0.28);
+  --vm-input-bg: rgba(15, 13, 11, 0.6);
+  --vm-input-border: rgba(217, 119, 6, 0.3);
+  --vm-input-text: #FBF8EE;
+  --vm-chip-bg: #2F2A22;
+  --vm-chip-text: #FBF8EE;
+  --vm-chip-border: rgba(217, 119, 6, 0.25);
+  --vm-stat-bg: #28241D;
+  --vm-stat-val: #FBF8EE;
 }
 
 /* --- THEME TOGGLE BUTTON --- */
@@ -329,7 +396,8 @@
   border: none;
   border-radius: 7px;
   color: var(--vm-tab-inactive-text);
-  font-size: 0.76rem;
+  font-family: var(--font-family-display, 'Twemoji Country Flags', 'Merge One', system-ui, sans-serif);
+  font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
   display: flex;
@@ -361,7 +429,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
-  padding-bottom: 90px; /* room for bottom wager drawer */
+  padding-bottom: 90px;
+  /* room for bottom wager drawer */
 }
 
 /* Contest Status Card */
@@ -446,6 +515,7 @@
 }
 
 .viewer-wager-runner {
+  font-family: var(--font-family-display, 'Twemoji Country Flags', 'Merge One', system-ui, sans-serif);
   font-size: 0.95rem;
   font-weight: 800;
   color: var(--vm-text-primary);
@@ -504,13 +574,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
+  font-family: var(--font-family-display, 'Twemoji Country Flags', 'Merge One', system-ui, sans-serif);
+  font-size: 0.78rem;
   font-weight: 800;
   color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .viewer-runner-name {
-  font-size: 0.88rem;
+  font-family: var(--font-family-display, 'Twemoji Country Flags', 'Merge One', system-ui, sans-serif);
+  font-size: 0.92rem;
   font-weight: 700;
   color: var(--vm-text-primary);
 }

@@ -1,11 +1,11 @@
 # Theme Sound Effects Directory
 
-Drop your custom audio files (`.mp3`, `.wav`, `.ogg`) into this directory (or inside any custom skin folder, e.g. `src/styles/Scifi/Sounds/`) to replace AnyToken's sound effects for this theme.
+Drop your custom audio files (`.mp3`, `.wav`, `.ogg`) into this directory (or inside any custom skin folder, e.g. `src/styles/Scifi/Sounds/`) to replace TokenPile's sound effects for this theme.
 
 ### How Theme Audio Works:
-1. **Skin Priority**: AnyToken looks for sound files in your currently active skin (`src/styles/<ActiveSkin>/Sounds/`).
+1. **Skin Priority**: TokenPile looks for sound files in your currently active skin (`src/styles/<ActiveSkin>/Sounds/`).
 2. **Default Fallback**: If a sound isn't in your active skin, it automatically falls back to `src/styles/Default/Sounds/`.
-3. **Procedural Synthesizer**: If no sound file exists anywhere, AnyToken uses zero-latency procedural Web Audio synthesis so sound effects always work out of the box!
+3. **Procedural Synthesizer**: If no sound file exists anywhere, TokenPile uses zero-latency procedural Web Audio synthesis so sound effects always work out of the box!
 
 ### Supported Sound Cue Filenames:
 - `token_clink.mp3` (or `.wav`, `.ogg`): Played when chips clink or quick bet drops

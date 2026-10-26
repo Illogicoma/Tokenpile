@@ -605,10 +605,10 @@ export const PhysicsScene2D = ({
           Body.setStatic(tb, false);
           Sleeping.set(tb, false);
           Body.setVelocity(tb, {
-            x: (Math.random() - 0.5) * 2.0,
-            y: 0.8 + Math.random() * 2.0,
+            x: (Math.random() - 0.5) * 3.5,
+            y: -1.5 - Math.random() * 2.0,
           });
-          Body.setAngularVelocity(tb, (Math.random() - 0.5) * 0.15);
+          Body.setAngularVelocity(tb, (Math.random() - 0.5) * 0.25);
         }
       }
     }
@@ -657,36 +657,10 @@ export const PhysicsScene2D = ({
       ctx.clearRect(0, 0, w, h);
 
       const geom = containerBoundsRef.current;
-      const hideWalls = bucketConfig?.hideWalls ?? false;
       const halfwayY = geom.y + geom.height * 0.45;
 
-      // Draw Container Glass Walls (HopperBoundsPreviewOverlay handles calibration guides at zIndex: 35)
-      if (!hideWalls) {
-        // Draw Glass Hopper Container
-        ctx.save();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
-        ctx.lineWidth = 2;
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.45)';
-
-        ctx.beginPath();
-        ctx.roundRect(geom.x, geom.y, geom.width, geom.height, [12, 12, 12, 12]);
-        ctx.fill();
-        ctx.stroke();
-
-        // Top glowing intake rim
-        ctx.strokeStyle = 'rgba(56, 189, 248, 0.65)';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(geom.x, geom.y);
-        ctx.lineTo(geom.x + geom.width, geom.y);
-        ctx.stroke();
-
-        // Container label
-        ctx.fillStyle = 'rgba(148, 163, 184, 0.85)';
-        ctx.font = '600 11px "JetBrains Mono", monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText('2D TOKEN HOPPER', geom.x + geom.width / 2, geom.y - 8);
-        ctx.restore();
+      if (bucketConfig?.enableTokens === false) {
+        return;
       }
 
       // Group bodies into static bedrock pile vs active moving tokens
@@ -809,6 +783,7 @@ export const PhysicsScene2D = ({
   // Handle Token Drops (Persistent across view changes!)
   useEffect(() => {
     if (!isVisible || !dropEvent || !engineRef.current) return;
+    if (bucketConfig?.enableTokens === false) return;
     if (lastProcessedEventIdRef.current === dropEvent.id) return;
     lastProcessedEventIdRef.current = dropEvent.id;
 
@@ -1080,6 +1055,17 @@ export const PhysicsScene2D = ({
 
     return () => clearInterval(interval);
   }, []);
+
+  // Clear tokens when tokens are disabled entirely
+  useEffect(() => {
+    if (bucketConfig?.enableTokens === false && engineRef.current) {
+      const allBodies = Composite.allBodies(engineRef.current.world);
+      const tokenBodies = allBodies.filter(b => !wallsRef.current.includes(b));
+      if (tokenBodies.length > 0) {
+        Composite.remove(engineRef.current.world, tokenBodies);
+      }
+    }
+  }, [bucketConfig?.enableTokens]);
 
   // Instant 1-Click "Condense Pile" for 2D arena
   useEffect(() => {

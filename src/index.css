@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 /* =========================================================================
-   AnyToken / Tokenpile - Default Theme Modules
+   TokenPile / Tokenpile - Default Theme Modules
    All visual skins are centered in ./styles/Default/.
    Custom skins (e.g. ./styles/Scifi/) can override any file or variable,
    falling back automatically to Default for any missing assets or styles.
@@ -26,7 +26,9 @@
   padding: 0;
 }
 
-html, body {
+html,
+body,
+#root {
   height: 100%;
   width: 100%;
 }
@@ -52,6 +54,7 @@ body {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -71,7 +74,45 @@ body {
   overflow: hidden;
 }
 
+/* OBS Overlay Mode Transparency & Clean Stream Presentation */
+html.in-obs-mode,
+body.in-obs-mode {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  overflow: hidden !important;
+}
+
 .app-root.obs-mode {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+.app-root.obs-mode .sidebar-resize-handle {
+  display: none !important;
+}
+
+.app-root.obs-mode .topbar-contest-actions,
+.app-root.obs-mode .topbar-actions,
+.app-root.obs-mode .celebration-footer,
+.app-root.obs-mode .celebration-window-controls {
+  display: none !important;
+}
+
+.app-root.obs-mode .app-topbar {
+  justify-content: space-between;
+}
+
+.app-root.obs-mode .topbar-contest-center {
+  margin-left: auto;
+}
+
+.app-root.obs-mode .race-visual-center-stage {
+  background: transparent !important;
+}
+
+.app-root.obs-mode .app-main-grid {
   background: transparent !important;
 }
 
@@ -82,7 +123,7 @@ body.in-viewer-mode {
   overflow-x: hidden !important;
   height: 100% !important;
   min-height: 100% !important;
-  background: #12141f;
+  background: var(--bg-color, #EDE8DF);
 }
 
 .app-root.ui-mode-viewer {
@@ -94,15 +135,35 @@ body.in-viewer-mode {
   overflow-x: hidden !important;
   display: flex;
   flex-direction: column;
+  background: var(--bg-color, #EDE8DF);
+}
+
+/* Broadcaster Extension Configuration Mode Scaffolding (Full Window / Iframe Scrollable) */
+html.in-config-mode,
+body.in-config-mode {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  min-height: 100% !important;
+  background: var(--bg-color, #EDE8DF);
+}
+
+.in-config-mode #root,
+#root:has(.ui-mode-config) {
+  height: auto !important;
+  min-height: 100% !important;
+  overflow: visible !important;
 }
 
 .app-root.ui-mode-config {
-  height: 100% !important;
-  min-height: 100% !important;
+  height: auto !important;
+  min-height: 100vh !important;
   width: 100% !important;
-  overflow-y: auto !important;
+  overflow-y: visible !important;
   overflow-x: hidden !important;
-  background: #0f172a;
+  background: var(--bg-color, #EDE8DF);
+  display: flex;
+  flex-direction: column;
 }
 
 /* Main Grid - 3-Column Layout: Left (Users) | Center (Odds Bar + Transparent Race Stage + Bucket) | Right (Horses) */
@@ -206,11 +267,11 @@ body.in-viewer-mode {
   position: relative;
   opacity: 0;
   transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-              width 0.18s cubic-bezier(0.16, 1, 0.3, 1),
-              height 0.18s cubic-bezier(0.16, 1, 0.3, 1),
-              background 0.18s ease,
-              box-shadow 0.18s ease,
-              border-color 0.18s ease;
+    width 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+    height 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
 }
 
 .sidebar-resize-grip::before,
@@ -469,6 +530,7 @@ body.in-viewer-mode {
     opacity: 0;
     transform: translate(-50%, 15px);
   }
+
   to {
     opacity: 1;
     transform: translate(-50%, 0);

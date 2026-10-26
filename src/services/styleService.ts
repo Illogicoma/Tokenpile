@@ -111,7 +111,7 @@ class StyleService {
    */
   setActiveStyle(style: string): void {
     const normalized = (style || 'default').trim().toLowerCase();
-    if (this.currentStyle === normalized && typeof document !== 'undefined' && document.getElementById('anytoken-custom-skin-override')) {
+    if (this.currentStyle === normalized && typeof document !== 'undefined' && document.getElementById('TokenPile-custom-skin-override')) {
       return;
     }
 
@@ -121,7 +121,7 @@ class StyleService {
       document.documentElement.setAttribute('data-style-theme', normalized);
 
       // Handle custom skin override stylesheet
-      let styleTag = document.getElementById('anytoken-custom-skin-override') as HTMLStyleElement | null;
+      let styleTag = document.getElementById('TokenPile-custom-skin-override') as HTMLStyleElement | null;
 
       if (normalized === 'default') {
         if (styleTag) {
@@ -130,7 +130,7 @@ class StyleService {
       } else {
         if (!styleTag) {
           styleTag = document.createElement('style');
-          styleTag.id = 'anytoken-custom-skin-override';
+          styleTag.id = 'TokenPile-custom-skin-override';
           document.head.appendChild(styleTag);
         }
 

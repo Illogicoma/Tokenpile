@@ -69,13 +69,13 @@ export const presetZipService = {
     zip.file('preset.json', JSON.stringify(exportedPreset, null, 2));
 
     // Add metadata / readme
-    const readmeContent = `AnyToken Race Preset: ${preset.name}
+    const readmeContent = `TokenPile Race Preset: ${preset.name}
 Title: ${preset.title}
 Racers: ${preset.outcomes.length}
 Created: ${new Date(preset.createdAt || Date.now()).toLocaleString()}
 
-To import this preset into AnyToken:
-1. Open AnyToken in your browser.
+To import this preset into TokenPile:
+1. Open TokenPile in your browser.
 2. Click the 'Presets' button in the top bar.
 3. Click 'Import Preset (.zip)' and choose this file.
 All runner configurations and custom local icons will be imported automatically!`;
@@ -107,7 +107,7 @@ All runner configurations and custom local icons will be imported automatically!
 
   /**
    * Unpacks a .zip (or parses a standalone .json), converts bundled icons to data URLs,
-   * registers them in AnyToken's icon library under a folder, and saves the preset.
+   * registers them in TokenPile's icon library under a folder, and saves the preset.
    */
   async importPresetFromZip(file: File): Promise<SavedPreset> {
     // If user selected a plain .json preset file instead of a .zip:

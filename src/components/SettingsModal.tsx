@@ -136,28 +136,31 @@ export const SettingsModal = ({
   // OBS Studio & Stream Overlay URLs
   const [copiedKey, setCopiedKey] = useState<'overlay' | 'dock' | 'viewer' | 'panel' | null>(null);
 
+  const getCleanChannel = () => {
+    return twitchConfig.channel ? twitchChatService.cleanChannelName(twitchConfig.channel) : '';
+  };
+
   const getDockUrl = () => {
     if (typeof window === 'undefined') return '';
-    return `${window.location.origin}${window.location.pathname}`;
+    return `${window.location.origin}/index.html`;
   };
 
   const getOverlayUrl = () => {
     if (typeof window === 'undefined') return '';
-    return `${window.location.origin}${window.location.pathname}?obs=1`;
+    const chan = getCleanChannel();
+    return `${window.location.origin}/obs.html${chan ? `?channel=${chan}` : ''}`;
   };
 
   const getViewerUrl = () => {
     if (typeof window === 'undefined') return '';
-    const chan = twitchConfig.channel ? twitchChatService.cleanChannelName(twitchConfig.channel) : '';
-    const query = chan ? `?channel=${chan}&mode=viewer` : '?mode=viewer';
-    return `${window.location.origin}${window.location.pathname}${query}`;
+    const chan = getCleanChannel();
+    return `${window.location.origin}/viewer.html${chan ? `?channel=${chan}` : ''}`;
   };
 
   const getPanelExtensionUrl = () => {
     if (typeof window === 'undefined') return '';
-    const chan = twitchConfig.channel ? twitchChatService.cleanChannelName(twitchConfig.channel) : '';
-    const query = chan ? `?channel=${chan}&mode=panel` : '?mode=panel';
-    return `${window.location.origin}${window.location.pathname}${query}`;
+    const chan = getCleanChannel();
+    return `${window.location.origin}/panel.html${chan ? `?channel=${chan}` : ''}`;
   };
 
   const handleCopyObsUrl = (type: 'overlay' | 'dock' | 'viewer' | 'panel') => {
@@ -230,24 +233,24 @@ export const SettingsModal = ({
       presetTiers = [...DEFAULT_TIER_CONFIGS];
     } else if (type === 'arcade') {
       presetTiers = [
-        { tier: 'colossal',  name: 'Colossal',  value: 25000, tint: '#ef4444', radius2D: 30, scale3D: 1.80, metalBoost: 1.0, roughOverride: 0.02 },
+        { tier: 'colossal', name: 'Colossal', value: 25000, tint: '#ef4444', radius2D: 30, scale3D: 1.80, metalBoost: 1.0, roughOverride: 0.02 },
         { tier: 'legendary', name: 'Legendary', value: 10000, tint: '#f59e0b', radius2D: 26, scale3D: 1.50, metalBoost: 1.0, roughOverride: 0.04 },
-        { tier: 'mythic',    name: 'Mythic',    value: 5000,  tint: '#a855f7', radius2D: 22, scale3D: 1.30, metalBoost: 1.0, roughOverride: 0.06 },
-        { tier: 'platinum',  name: 'Platinum',  value: 1000,  tint: '#06b6d4', radius2D: 19, scale3D: 1.15, metalBoost: 1.0, roughOverride: 0.08 },
-        { tier: 'gold',      name: 'Gold',      value: 500,   tint: '#fbbf24', radius2D: 17, scale3D: 1.05, metalBoost: 0.95, roughOverride: 0.12 },
-        { tier: 'silver',    name: 'Silver',    value: 100,   tint: '#cbd5e1', radius2D: 14, scale3D: 0.95, metalBoost: 0.85, roughOverride: 0.20 },
-        { tier: 'base',      name: 'Base',      value: 1,     tint: '#94a3b8', radius2D: 12, scale3D: 0.85, metalBoost: 0.0, roughOverride: null },
+        { tier: 'mythic', name: 'Mythic', value: 5000, tint: '#a855f7', radius2D: 22, scale3D: 1.30, metalBoost: 1.0, roughOverride: 0.06 },
+        { tier: 'platinum', name: 'Platinum', value: 1000, tint: '#06b6d4', radius2D: 19, scale3D: 1.15, metalBoost: 1.0, roughOverride: 0.08 },
+        { tier: 'gold', name: 'Gold', value: 500, tint: '#fbbf24', radius2D: 17, scale3D: 1.05, metalBoost: 0.95, roughOverride: 0.12 },
+        { tier: 'silver', name: 'Silver', value: 100, tint: '#cbd5e1', radius2D: 14, scale3D: 0.95, metalBoost: 0.85, roughOverride: 0.20 },
+        { tier: 'base', name: 'Base', value: 1, tint: '#94a3b8', radius2D: 12, scale3D: 0.85, metalBoost: 0.0, roughOverride: null },
       ];
     } else if (type === 'whale') {
       presetTiers = [
-        { tier: 'titan',     name: 'Titan',     value: 10000000, tint: '#ec4899', radius2D: 40, scale3D: 2.60, metalBoost: 1.0, roughOverride: 0.01 },
-        { tier: 'colossal',  name: 'Colossal',  value: 1000000,  tint: '#ef4444', radius2D: 34, scale3D: 2.20, metalBoost: 1.0, roughOverride: 0.02 },
-        { tier: 'legendary', name: 'Legendary', value: 100000,   tint: '#f59e0b', radius2D: 28, scale3D: 1.70, metalBoost: 1.0, roughOverride: 0.04 },
-        { tier: 'mythic',    name: 'Mythic',    value: 25000,    tint: '#a855f7', radius2D: 24, scale3D: 1.45, metalBoost: 1.0, roughOverride: 0.06 },
-        { tier: 'platinum',  name: 'Platinum',  value: 5000,     tint: '#06b6d4', radius2D: 20, scale3D: 1.25, metalBoost: 1.0, roughOverride: 0.08 },
-        { tier: 'gold',      name: 'Gold',      value: 500,      tint: '#fbbf24', radius2D: 17, scale3D: 1.10, metalBoost: 0.95, roughOverride: 0.12 },
-        { tier: 'silver',    name: 'Silver',    value: 100,      tint: '#cbd5e1', radius2D: 14, scale3D: 0.95, metalBoost: 0.85, roughOverride: 0.20 },
-        { tier: 'base',      name: 'Base',      value: 1,        tint: '#94a3b8', radius2D: 12, scale3D: 0.85, metalBoost: 0.0, roughOverride: null },
+        { tier: 'titan', name: 'Titan', value: 10000000, tint: '#ec4899', radius2D: 40, scale3D: 2.60, metalBoost: 1.0, roughOverride: 0.01 },
+        { tier: 'colossal', name: 'Colossal', value: 1000000, tint: '#ef4444', radius2D: 34, scale3D: 2.20, metalBoost: 1.0, roughOverride: 0.02 },
+        { tier: 'legendary', name: 'Legendary', value: 100000, tint: '#f59e0b', radius2D: 28, scale3D: 1.70, metalBoost: 1.0, roughOverride: 0.04 },
+        { tier: 'mythic', name: 'Mythic', value: 25000, tint: '#a855f7', radius2D: 24, scale3D: 1.45, metalBoost: 1.0, roughOverride: 0.06 },
+        { tier: 'platinum', name: 'Platinum', value: 5000, tint: '#06b6d4', radius2D: 20, scale3D: 1.25, metalBoost: 1.0, roughOverride: 0.08 },
+        { tier: 'gold', name: 'Gold', value: 500, tint: '#fbbf24', radius2D: 17, scale3D: 1.10, metalBoost: 0.95, roughOverride: 0.12 },
+        { tier: 'silver', name: 'Silver', value: 100, tint: '#cbd5e1', radius2D: 14, scale3D: 0.95, metalBoost: 0.85, roughOverride: 0.20 },
+        { tier: 'base', name: 'Base', value: 1, tint: '#94a3b8', radius2D: 12, scale3D: 0.85, metalBoost: 0.0, roughOverride: null },
       ];
     }
     const saved = storageService.saveTokenTiers(presetTiers);
@@ -525,6 +528,40 @@ export const SettingsModal = ({
                   </div>
                 </div>
 
+                {/* OBS Stream Overlay Mirroring Card */}
+                <div
+                  style={{
+                    marginTop: '0.85rem',
+                    padding: '0.8rem 0.95rem',
+                    background: 'rgba(56, 189, 248, 0.07)',
+                    border: '1px solid rgba(56, 189, 248, 0.28)',
+                    borderRadius: 'var(--app-radius-sm, 10px)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.35rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                      <Monitor size={15} color="#38bdf8" />
+                      <span style={{ fontWeight: 700, color: '#38bdf8', fontSize: '0.84rem', fontFamily: "'Merge One', system-ui, sans-serif" }}>
+                        OBS Browser Source (100% Transparent Live Mirror)
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className="cyber-btn-ghost mini-btn"
+                      onClick={() => handleCopyObsUrl('overlay')}
+                      style={{ fontSize: '0.74rem', padding: '0.25rem 0.65rem' }}
+                    >
+                      {copiedKey === 'overlay' ? <><Check size={12} color="#16a34a" /> Copied!</> : <><Copy size={12} /> Copy OBS URL</>}
+                    </button>
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted, #8E7D53)', marginBottom: '0.4rem' }}>
+                    Add as a Browser Source in OBS (<strong>1920&times;1080</strong>). It automatically mirrors this dashboard on stream with zero background!
+                  </div>
+                  <code className="obs-url-code" style={{ display: 'block', fontSize: '0.72rem', padding: '0.35rem 0.65rem' }}>
+                    {getOverlayUrl()}
+                  </code>
+                </div>
+
                 {/* Editable Chat Commands */}
                 <div style={{ marginTop: '0.8rem', borderTop: '1px dashed var(--well-border, rgba(125, 107, 66, 0.22))', paddingTop: '0.8rem' }}>
                   <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary, #5A4A28)', marginBottom: '0.6rem', fontFamily: "'Merge One', system-ui, sans-serif" }}>
@@ -640,7 +677,7 @@ export const SettingsModal = ({
                     <span className="slider round"></span>
                   </label>
                   <span style={{ fontSize: '0.78rem', color: 'var(--text-primary, #5A4A28)' }}>
-                    Auto-connect to Twitch chat when AnyToken opens
+                    Auto-connect to Twitch chat when TokenPile opens
                   </span>
                 </div>
               </div>
@@ -1218,11 +1255,11 @@ export const SettingsModal = ({
                 <div className="token-tiers-editor-list" style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
                   {tiers.map((tier, index) => {
                     const isBase = tier.value === 1 || tier.tier === 'base';
-                    const formattedDisplay = tier.value >= 1000000 
-                      ? `${(tier.value / 1000000).toLocaleString(undefined, { maximumFractionDigits: 1 })}M` 
-                      : tier.value >= 1000 
-                      ? `${(tier.value / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })}k` 
-                      : `${tier.value}`;
+                    const formattedDisplay = tier.value >= 1000000
+                      ? `${(tier.value / 1000000).toLocaleString(undefined, { maximumFractionDigits: 1 })}M`
+                      : tier.value >= 1000
+                        ? `${(tier.value / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })}k`
+                        : `${tier.value}`;
 
                     return (
                       <div
@@ -1637,6 +1674,47 @@ export const SettingsModal = ({
                   </div>
 
                   <div className="calibration-density-section" style={{ margin: 0 }}>
+                    <div className="calibration-density-header" style={{ marginBottom: '0.85rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--well-border, rgba(125, 107, 66, 0.2))' }}>
+                      <div>
+                        <div style={{ fontWeight: 700, color: 'var(--text-primary, #5A4A28)', fontSize: '0.85rem' }}>
+                          Physical Tokens Simulation
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted, #8E7D53)' }}>
+                          Simulate and drop 2D/3D tokens into the arena. Turn off to disable tokens entirely.
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className={`cyber-toggle-btn ${bucketConfig.enableTokens !== false ? 'active-amber' : ''}`}
+                        onClick={() => onUpdateBucketConfig({ ...bucketConfig, enableTokens: bucketConfig.enableTokens === false })}
+                        style={{ padding: '0.3rem 0.75rem', fontSize: '0.74rem' }}
+                      >
+                        <span>{bucketConfig.enableTokens !== false ? 'Tokens: Enabled' : 'Tokens: Disabled'}</span>
+                      </button>
+                    </div>
+
+                    <div className="calibration-density-header" style={{ marginBottom: '0.85rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--well-border, rgba(125, 107, 66, 0.2))' }}>
+                      <div>
+                        <div style={{ fontWeight: 700, color: 'var(--text-primary, #5A4A28)', fontSize: '0.85rem' }}>
+                          Hopper Panel Background
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted, #8E7D53)' }}>
+                          Display a themed panel behind the hopper bounds. Hide for transparent OBS overlays.
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className={`cyber-toggle-btn ${(bucketConfig.backgroundVisible !== undefined ? bucketConfig.backgroundVisible : !bucketConfig.hideWalls) ? 'active-amber' : ''}`}
+                        onClick={() => {
+                          const current = bucketConfig.backgroundVisible !== undefined ? bucketConfig.backgroundVisible : !bucketConfig.hideWalls;
+                          onUpdateBucketConfig({ ...bucketConfig, backgroundVisible: !current, hideWalls: current });
+                        }}
+                        style={{ padding: '0.3rem 0.75rem', fontSize: '0.74rem' }}
+                      >
+                        <span>{(bucketConfig.backgroundVisible !== undefined ? bucketConfig.backgroundVisible : !bucketConfig.hideWalls) ? 'Background: Visible' : 'Background: Hidden'}</span>
+                      </button>
+                    </div>
+
                     <div className="calibration-density-header">
                       <div>
                         <div style={{ fontWeight: 700, color: 'var(--text-primary, #5A4A28)', fontSize: '0.85rem' }}>

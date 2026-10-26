@@ -339,6 +339,8 @@ function getOrCreateExtrudedTokenGeometry(
   }
 
   if (geometries.length === 0) {
+    baseInnerVoxel.dispose();
+    baseOutlineVoxel.dispose();
     const box = new THREE.BoxGeometry(targetSpan, targetSpan, rimThickness);
     extrudedGeometryCache.set(key, box);
     return box;
@@ -346,6 +348,14 @@ function getOrCreateExtrudedTokenGeometry(
 
   const merged = mergeGeometries(geometries, false);
   merged.computeVertexNormals();
+
+  // Clean up temporary constituent voxel geometries from GPU/RAM
+  baseInnerVoxel.dispose();
+  baseOutlineVoxel.dispose();
+  for (let i = 0; i < geometries.length; i++) {
+    geometries[i].dispose();
+  }
+
   extrudedGeometryCache.set(key, merged);
   return merged;
 }
@@ -503,9 +513,9 @@ const Single3DToken = ({
         rb.setAngularDamping(0.3);
         rb.wakeUp();
         rb.applyImpulse({
-          x: (Math.random() - 0.5) * 0.4,
-          y: -0.8 - Math.random() * 0.5,
-          z: (Math.random() - 0.5) * 0.4
+          x: (Math.random() - 0.5) * 0.6,
+          y: 0.8 + Math.random() * 0.8,
+          z: (Math.random() - 0.5) * 0.6
         }, true);
       }
     }
@@ -894,6 +904,7 @@ export const PhysicsScene = ({
   // Staggered drop spawning into 3D world across the FULL bucket bounds
   useEffect(() => {
     if (!isVisible || !dropEvent) return;
+    if (bucketConfig?.enableTokens === false) return;
     if (lastProcessedEventIdRef.current === dropEvent.id) return;
     lastProcessedEventIdRef.current = dropEvent.id;
 
@@ -972,9 +983,9 @@ export const PhysicsScene = ({
         rb.setAngularDamping(0.3);
         rb.wakeUp();
         rb.applyImpulse({
-          x: (Math.random() - 0.5) * 0.4,
-          y: -0.8 - Math.random() * 0.5,
-          z: (Math.random() - 0.5) * 0.4
+          x: (Math.random() - 0.5) * 0.6,
+          y: 0.8 + Math.random() * 0.8,
+          z: (Math.random() - 0.5) * 0.6
         }, true);
       });
     }
@@ -1185,7 +1196,12 @@ export const PhysicsScene = ({
     return () => clearInterval(interval);
   }, [bucketConfig]);
 
-  const hideWalls = bucketConfig?.hideWalls ?? false;
+  // Clear tokens when tokens are disabled entirely
+  useEffect(() => {
+    if (bucketConfig?.enableTokens === false) {
+      setTokens([]);
+    }
+  }, [bucketConfig?.enableTokens]);
 
   return (
     <div 
@@ -1203,50 +1219,12 @@ export const PhysicsScene = ({
         visibility: isVisible ? 'visible' : 'hidden',
         transition: 'opacity 0.15s ease',
         zIndex: 10,
-        background: !hideWalls ? 'rgba(15, 23, 42, 0.45)' : 'transparent',
-        border: !hideWalls ? '2px solid rgba(255, 255, 255, 0.16)' : 'none',
-        boxShadow: !hideWalls ? '0 8px 32px rgba(0, 0, 0, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.15)' : 'none',
-        backdropFilter: !hideWalls ? 'blur(4px)' : 'none',
+        background: 'transparent',
+        border: 'none',
+        boxShadow: 'none',
+        backdropFilter: 'none',
       }}
     >
-      {/* Top glowing intake rim */}
-      {!hideWalls && (
-        <div 
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '3px',
-            background: 'linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.8), transparent)',
-            boxShadow: '0 0 10px #38bdf8',
-            zIndex: 2,
-            pointerEvents: 'none'
-          }}
-        />
-      )}
-
-      {/* Hopper Header Badge */}
-      {!hideWalls && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '6px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            color: 'rgba(148, 163, 184, 0.85)',
-            fontFamily: '"JetBrains Mono", monospace',
-            fontSize: '11px',
-            fontWeight: 600,
-            letterSpacing: '0.05em',
-            zIndex: 2,
-            pointerEvents: 'none',
-            userSelect: 'none'
-          }}
-        >
-          3D TOKEN HOPPER
-        </div>
-      )}
 
       {/* Three.js 3D WebGL Canvas strictly inside the calibrated bucket bounds */}
       <Canvas 
@@ -1273,7 +1251,6 @@ export const PhysicsScene = ({
             pileOffset={pileOffset} 
             arenaWidth={arenaWidth3D}
             arenaDepth={arenaDepth3D}
-            hideWalls={hideWalls} 
             isBucketTrapdoorOpen={isBucketTrapdoorOpen}
           />
           
@@ -1375,13 +1352,11 @@ const PhysicsArena = ({
   pileOffset,
   arenaWidth,
   arenaDepth,
-  hideWalls = false,
   isBucketTrapdoorOpen = false
 }: { 
   pileOffset: { x: number; y: number };
   arenaWidth: number;
   arenaDepth: number;
-  hideWalls?: boolean;
   isBucketTrapdoorOpen?: boolean;
 }) => {
   const halfW = arenaWidth / 2;
@@ -1403,19 +1378,7 @@ const PhysicsArena = ({
         <CuboidCollider args={[halfW * 3, 1.5, halfD * 3]} friction={0.9} restitution={0.05} />
       </RigidBody>
       
-      {/* Visual Arena Flat Floor Tray */}
-      {!hideWalls && !isBucketTrapdoorOpen && (
-        <mesh position={[0, floorY - 0.12, 0]} receiveShadow>
-          <boxGeometry args={[arenaWidth, 0.24, arenaDepth]} />
-          <meshStandardMaterial 
-            color="#0f172a" 
-            roughness={0.35} 
-            metalness={0.65}
-            emissive="#1e1b4b"
-            emissiveIntensity={0.2}
-          />
-        </mesh>
-      )}
+
 
       {/* Left Wall Collider - Slick zero-friction chute */}
       <RigidBody type="fixed" position={[-halfW - 0.25, 5, 0]}>

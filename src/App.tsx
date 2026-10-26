@@ -30,7 +30,6 @@ import { TokenMakerModal } from './components/TokenMakerModal';
 import { WinnerCelebrationModal } from './components/WinnerCelebrationModal';
 import { WinLoseNotificationOverlay, type FloatingNotification } from './components/WinLoseNotificationOverlay';
 import { SettingsModal } from './components/SettingsModal';
-import { StreamOverlayView } from './components/StreamOverlayView';
 import { ViewControlsBar } from './components/ViewControlsBar';
 import { CompactRaceDock } from './components/CompactRaceDock';
 import { CompactTopOddsBar } from './components/CompactTopOddsBar';
@@ -41,14 +40,15 @@ import { HorseEditorModal } from './components/HorseEditorModal';
 import { BetLogModal } from './components/BetLogModal';
 import { AdminUnlockModal } from './components/AdminUnlockModal';
 import { HopperBoundsPreviewOverlay } from './components/HopperBoundsPreviewOverlay';
+import { HopperBackdropPanel } from './components/HopperBackdropPanel';
 import { ViewerView } from './components/ViewerView';
 import { ConfigView } from './components/ConfigView';
 import { isImageSource } from './components/IconDisplay';
 import { soundEffects } from './services/soundEffects';
 import { twitchChatService } from './services/twitchChatService';
-import { storageService, onStreamSync } from './services/storageService';
+import { storageService, onStreamSync, broadcastStreamSync } from './services/storageService';
 import { styleService } from './services/styleService';
-import { Settings, Tv, Volume2, VolumeX, Lock, Play, RotateCcw, Trophy, Sliders, Layers, FileText, ShieldCheck, ShieldAlert, Smartphone } from 'lucide-react';
+import { Settings, Tv, Volume2, VolumeX, Lock, Play, RotateCcw, Trophy, Sliders, Layers, FileText, ShieldCheck, ShieldAlert, ChevronRight, ChevronLeft, RefreshCw } from 'lucide-react';
 import './index.css';
 
 // Initial 20-Horse Race Contest
@@ -125,92 +125,6 @@ function App() {
     storageService.saveUsers(users);
   }, [users]);
 
-  // Real-time synchronization for OBS Browser Source <-> Admin Dock <-> Viewer Mode
-  useEffect(() => {
-    const unsubscribe = onStreamSync((data) => {
-      if (data.type === 'CONTEST_UPDATED') {
-        setContest(prev => {
-          // Deep check to prevent redundant re-renders and loops
-          if (JSON.stringify(prev) === JSON.stringify(data.payload)) return prev;
-          isRemoteSyncRef.current.contest = true;
-          contestRef.current = data.payload;
-          return data.payload;
-        });
-      } else if (data.type === 'USERS_UPDATED') {
-        setUsers(prev => {
-          // Deep check to prevent redundant re-renders and loops
-          if (JSON.stringify(prev) === JSON.stringify(data.payload)) return prev;
-          isRemoteSyncRef.current.users = true;
-          usersRef.current = data.payload;
-          return data.payload;
-        });
-      } else if (data.type === 'ACTIVE_STYLE_UPDATED' && data.payload?.style) {
-        setActiveStyle(data.payload.style);
-        styleService.setActiveStyle(data.payload.style);
-      } else if (data.type === 'TOKEN_TIERS_UPDATED' && Array.isArray(data.payload)) {
-        setTokenTiers(data.payload);
-        reloadTierConfigs(data.payload);
-      } else if (data.type === 'VIEWER_BET_REQUEST' && data.payload) {
-        const { userId, userName, userConfig, outcomeId, amount } = data.payload;
-        if (!outcomeId || !amount || amount <= 0) return;
-
-        // Security & Moderation: Sanitize viewer token emoji so viewers cannot inject local/external image URLs or base64 blobs into OBS broadcast
-        const rawConfig = userConfig || data.payload.tokenConfig;
-        const safeConfig = rawConfig ? { ...rawConfig } : { ...storageService.getDefaultToken() };
-        if (safeConfig.emoji && isImageSource(safeConfig.emoji)) {
-          safeConfig.emoji = '🪙';
-        }
-
-        const curUsers = usersRef.current;
-        let targetUser = curUsers.find(u => u.id === userId || (userName && u.name.toLowerCase() === userName.toLowerCase()));
-        if (!targetUser) {
-          const startingTokens = twitchChatService.getConfig().startingTokens || 50000;
-          const newUser: UserRosterItem = {
-            id: userId || `viewer_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-            name: userName || 'Viewer',
-            tokens: startingTokens,
-            currentBetInput: String(amount),
-            config: safeConfig,
-            isMockUser: false
-          };
-          targetUser = newUser;
-          const nextUsers = [...curUsers, newUser];
-          usersRef.current = nextUsers;
-          setUsers(nextUsers);
-        } else if (rawConfig) {
-          targetUser = {
-            ...targetUser,
-            config: { ...targetUser.config, ...safeConfig }
-          };
-          const nextUsers = curUsers.map(u => u.id === targetUser!.id ? targetUser! : u);
-          usersRef.current = nextUsers;
-          setUsers(nextUsers);
-        }
-
-        if (handleBetRef.current) {
-          handleBetRef.current(targetUser.id, amount, outcomeId);
-        }
-      } else if (data.type === 'VIEWER_TOKEN_UPDATED' && data.payload) {
-        const { userId, userName, config } = data.payload;
-        const curUsers = usersRef.current;
-        const targetIndex = curUsers.findIndex(u => u.id === userId || (userName && u.name.toLowerCase() === userName.toLowerCase()));
-        if (targetIndex !== -1 && config) {
-          const safeConfig = { ...config };
-          if (safeConfig.emoji && isImageSource(safeConfig.emoji)) {
-            safeConfig.emoji = '🪙';
-          }
-          const nextUsers = [...curUsers];
-          nextUsers[targetIndex] = {
-            ...nextUsers[targetIndex],
-            config: { ...nextUsers[targetIndex].config, ...safeConfig }
-          };
-          usersRef.current = nextUsers;
-          setUsers(nextUsers);
-        }
-      }
-    });
-    return unsubscribe;
-  }, []);
 
   // Storage & Preferences
   const [activeStyle, setActiveStyle] = useState<string>(() => storageService.getActiveStyle());
@@ -465,7 +379,7 @@ function App() {
     const params = new URLSearchParams(window.location.search);
     const mode = params.get('mode');
     const pathname = window.location.pathname.toLowerCase();
-    const explicitHtmlMode = (window as any).__ANYTOKEN_MODE__;
+    const explicitHtmlMode = (window as any).__TokenPile_MODE__;
 
     // Detect if running inside an iframe (such as Twitch extension panel or creator config modal)
     let isIframe = false;
@@ -481,6 +395,15 @@ function App() {
     }
     if (explicitHtmlMode === 'panel' || explicitHtmlMode === 'viewer' || pathname.endsWith('panel.html') || pathname.endsWith('viewer.html')) {
       return 'viewer';
+    }
+    if (
+      explicitHtmlMode === 'obs' ||
+      pathname.endsWith('obs.html') ||
+      pathname.includes('obs.html') ||
+      pathname.endsWith('/obs') ||
+      pathname === '/obs'
+    ) {
+      return 'obs';
     }
 
     // 1. Explicit configuration mode (from query param or Twitch Creator Dashboard)
@@ -522,7 +445,7 @@ function App() {
     return 'full';
   });
 
-  // Sync document body class for scrolling when in viewer mode
+  // Sync document body class for scrolling when in viewer/config modes and transparency when in obs mode
   useEffect(() => {
     if (uiMode === 'viewer') {
       document.body.classList.add('in-viewer-mode');
@@ -531,11 +454,29 @@ function App() {
       document.body.classList.remove('in-viewer-mode');
       document.documentElement.classList.remove('in-viewer-mode');
     }
+
+    if (uiMode === 'config') {
+      document.body.classList.add('in-config-mode');
+      document.documentElement.classList.add('in-config-mode');
+    } else {
+      document.body.classList.remove('in-config-mode');
+      document.documentElement.classList.remove('in-config-mode');
+    }
+
+    if (uiMode === 'obs') {
+      document.body.classList.add('in-obs-mode');
+      document.documentElement.classList.add('in-obs-mode');
+    } else {
+      document.body.classList.remove('in-obs-mode');
+      document.documentElement.classList.remove('in-obs-mode');
+    }
+
     return () => {
-      document.body.classList.remove('in-viewer-mode');
-      document.documentElement.classList.remove('in-viewer-mode');
+      document.body.classList.remove('in-viewer-mode', 'in-obs-mode', 'in-config-mode');
+      document.documentElement.classList.remove('in-viewer-mode', 'in-obs-mode', 'in-config-mode');
     };
   }, [uiMode]);
+
   const [thickness, setThickness] = useState(0.25);
   const [pileOffset, setPileOffset] = useState({ x: 0, y: 0 });
   const [silverThreshold, setSilverThreshold] = useState(100);
@@ -544,18 +485,23 @@ function App() {
   const [onResetTrigger, setOnResetTrigger] = useState(0);
   const [condenseTrigger, setCondenseTrigger] = useState(0);
   const [jostleTrigger, setJostleTrigger] = useState(0);
+  const [isJostling, setIsJostling] = useState(false);
   const [isWinnerBurst, setIsWinnerBurst] = useState(false);
   const userBetAccumulatorRef = useRef<Map<string, number>>(new Map());
 
   // Trip physics switch to unfreeze and rejostle all tokens in the hopper
   const handleJostleTokens = () => {
     setJostleTrigger(p => p + 1);
+    broadcastStreamSync('JOSTLE_TOKENS', {});
+    soundEffects.playTokenClink();
+    setIsJostling(true);
+    setTimeout(() => setIsJostling(false), 450);
   };
 
   // House & GM Configuration (Streamer identity for quick bets and prize pools)
   const [houseConfig, setHouseConfig] = useState<HouseConfig>(() => {
     try {
-      const saved = localStorage.getItem('anytoken_house_config');
+      const saved = localStorage.getItem('TokenPile_house_config');
       if (saved) return JSON.parse(saved);
     } catch { }
     return {
@@ -569,13 +515,13 @@ function App() {
   const handleUpdateHouseConfig = useCallback((newConfig: HouseConfig) => {
     setHouseConfig(newConfig);
     try {
-      localStorage.setItem('anytoken_house_config', JSON.stringify(newConfig));
+      localStorage.setItem('TokenPile_house_config', JSON.stringify(newConfig));
     } catch { }
   }, []);
 
   // Layout & Calibration State
   const [filterText, setFilterText] = useState('');
-  const [presetCascadeKey, setPresetCascadeKey] = useState<number>(0);
+  const [presetCascadeKey, setPresetCascadeKey] = useState<number>(() => Date.now());
   const [showTestRaceBg, setShowTestRaceBg] = useState<boolean>(() => {
     try {
       const saved = storageService.getBucketConfig();
@@ -593,6 +539,27 @@ function App() {
   const [isViewerDrawerOpen, setIsViewerDrawerOpen] = useState(false);
   const [isMuted, setIsMuted] = useState(soundEffects.getMuted());
   const [floatingNotifications, setFloatingNotifications] = useState<FloatingNotification[]>([]);
+  const [isTopbarCompact, setIsTopbarCompact] = useState<boolean>(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('compact') === '1' || params.get('stream') === '1' || params.get('mirror') === '1') {
+        return true;
+      }
+      return localStorage.getItem('TokenPile_topbar_compact') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleToggleTopbarCompact = () => {
+    setIsTopbarCompact(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('TokenPile_topbar_compact', String(next));
+      } catch { }
+      return next;
+    });
+  };
   const [horseEditorState, setHorseEditorState] = useState<{
     isOpen: boolean;
     horse: BetOutcome | null;
@@ -607,14 +574,40 @@ function App() {
   const [isBucketTrapdoorOpen, setIsBucketTrapdoorOpen] = useState(false);
   const [isViewControlsOpen, setIsViewControlsOpen] = useState(false);
 
+  // When running as authoritative broadcaster dashboard, broadcast snapshot once on initial mount
+  // so the local relay server & newly connected OBS sources get the initial state snapshot.
+  const hasBroadcastInitialSnapshotRef = useRef(false);
+  useEffect(() => {
+    if (uiMode === 'full' && !hasBroadcastInitialSnapshotRef.current) {
+      hasBroadcastInitialSnapshotRef.current = true;
+      const timer = setTimeout(() => {
+        broadcastStreamSync('STATE_SNAPSHOT', {
+          contest,
+          users,
+          twitch: twitchChatService.getConfig(),
+          style: activeStyle,
+          celebration: isCelebrationOpen ? celebrationData : null,
+          renderEngine,
+          bucketConfig,
+        });
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [uiMode]);
+
+  const handleToggleRenderEngine = (engine: RenderEngine) => {
+    setRenderEngine(engine);
+    broadcastStreamSync('ENGINE_UPDATED', { engine });
+  };
+
   // Admin & Permission Security State
   const [isAdmin, setIsAdmin] = useState<boolean>(() => storageService.isAdminUnlocked());
   const [isAdminModalOpen, setIsAdminModalOpen] = useState<boolean>(false);
 
-  const lockBetsRef = useRef<() => void>(() => {});
-  const reopenBetsRef = useRef<() => void>(() => {});
-  const resetContestRef = useRef<() => void>(() => {});
-  const updateUserPointsRef = useRef<(userId: string, points: number) => void>(() => {});
+  const lockBetsRef = useRef<() => void>(() => { });
+  const reopenBetsRef = useRef<() => void>(() => { });
+  const resetContestRef = useRef<() => void>(() => { });
+  const updateUserPointsRef = useRef<(userId: string, points: number) => void>(() => { });
 
   const handleAdminUnlock = (enteredPass: string): boolean => {
     const currentPass = storageService.getAdminPasscode();
@@ -644,6 +637,15 @@ function App() {
   const [swarmCount, setSwarmCount] = useState(0);
   const swarmIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  useEffect(() => {
+    return () => {
+      if (swarmIntervalRef.current) {
+        clearInterval(swarmIntervalRef.current);
+        swarmIntervalRef.current = null;
+      }
+    };
+  }, []);
+
   // Tray tab tracking and live bound adjustment feedback
   const [controlsTrayTab, setControlsTrayTab] = useState<'bucket' | 'layout' | 'arena' | 'theme'>('bucket');
   const [isAdjustingHopperBounds, setIsAdjustingHopperBounds] = useState<boolean>(false);
@@ -658,6 +660,7 @@ function App() {
     }
     saveBucketTimeoutRef.current = setTimeout(() => {
       storageService.saveBucketConfig(newConfig);
+      broadcastStreamSync('BUCKET_CONFIG_UPDATED', newConfig);
       saveBucketTimeoutRef.current = null;
     }, 250);
 
@@ -695,6 +698,193 @@ function App() {
     usersRef.current = users;
     contestRef.current = contest;
   }, [users, contest]);
+
+  // Real-time synchronization for OBS Browser Source <-> Admin Dashboard <-> Viewer Mode
+  useEffect(() => {
+    const unsubscribe = onStreamSync((data) => {
+      // 1. Initial State Hydration / Live Broadcaster Snapshot Sync
+      if ((data.type === 'INITIAL_STATE' || data.type === 'STATE_SNAPSHOT') && data.payload) {
+        if (data.payload.contest) {
+          isRemoteSyncRef.current.contest = true;
+          contestRef.current = data.payload.contest;
+          setContest(data.payload.contest);
+        }
+        if (data.payload.users) {
+          isRemoteSyncRef.current.users = true;
+          usersRef.current = data.payload.users;
+          setUsers(data.payload.users);
+        }
+        if (data.payload.twitch) {
+          twitchChatService.saveConfig(data.payload.twitch);
+          if (data.payload.twitch.channel && data.payload.twitch.autoConnect) {
+            twitchChatService.connect();
+          }
+        }
+        if (data.payload.style) {
+          setActiveStyle(data.payload.style);
+          styleService.setActiveStyle(data.payload.style);
+        }
+        if (data.payload.celebration) {
+          setCelebrationData(data.payload.celebration);
+          setIsCelebrationOpen(true);
+        }
+        if (data.payload.renderEngine) {
+          setRenderEngine(data.payload.renderEngine);
+        }
+        if (data.payload.bucketConfig) {
+          setBucketConfig(data.payload.bucketConfig);
+        }
+      } else if (data.type === 'TWITCH_CONFIG_UPDATED' && data.payload) {
+        twitchChatService.saveConfig(data.payload);
+        if (data.payload.channel && data.payload.autoConnect) {
+          twitchChatService.connect();
+        }
+      } else if (data.type === 'CONTEST_UPDATED') {
+        setContest(prev => {
+          if (JSON.stringify(prev) === JSON.stringify(data.payload)) return prev;
+          isRemoteSyncRef.current.contest = true;
+          contestRef.current = data.payload;
+          return data.payload;
+        });
+      } else if (data.type === 'USERS_UPDATED') {
+        setUsers(prev => {
+          if (JSON.stringify(prev) === JSON.stringify(data.payload)) return prev;
+          isRemoteSyncRef.current.users = true;
+          usersRef.current = data.payload;
+          return data.payload;
+        });
+      } else if (data.type === 'ACTIVE_STYLE_UPDATED' && data.payload?.style) {
+        setActiveStyle(data.payload.style);
+        styleService.setActiveStyle(data.payload.style);
+      } else if (data.type === 'TOKEN_TIERS_UPDATED' && Array.isArray(data.payload)) {
+        setTokenTiers(data.payload);
+        reloadTierConfigs(data.payload);
+      } else if (data.type === 'TOKEN_DROP_EVENT' && data.payload) {
+        // Physical Token Coin Drop into the Hopper
+        const drop = data.payload.dropEvent || data.payload;
+        setLastDrop(drop);
+        if (data.payload.isPot) {
+          soundEffects.playCashout();
+        } else {
+          soundEffects.playBetDrop();
+        }
+        if (data.payload.notification) {
+          setFloatingNotifications(prev => [...prev.slice(-5), data.payload.notification]);
+        }
+      } else if (data.type === 'CASCADE_ANIMATION') {
+        // Staggered Horse Card Filing-In Animation
+        setPresetCascadeKey(data.payload?.key || Date.now());
+        soundEffects.playTokenClink();
+      } else if (data.type === 'WINNER_CELEBRATION' && data.payload?.celebrationData) {
+        // Victory Screen Celebration Modal & Confetti Burst
+        setCelebrationData(data.payload.celebrationData);
+        setIsCelebrationOpen(true);
+        setIsWinnerBurst(true);
+        setJostleTrigger(p => p + 1);
+        setTimeout(() => setIsWinnerBurst(false), 3000);
+      } else if (data.type === 'CLOSE_CELEBRATION') {
+        setIsCelebrationOpen(false);
+      } else if (data.type === 'TRAPDOOR_EVENT') {
+        const isOpen = Boolean(data.payload?.open);
+        setIsBucketTrapdoorOpen(isOpen);
+        if (isOpen) {
+          setJostleTrigger(p => p + 1);
+        } else {
+          setOnResetTrigger(p => p + 1);
+        }
+      } else if (data.type === 'FLOATING_NOTIFICATIONS' && Array.isArray(data.payload?.notifications)) {
+        setFloatingNotifications(prev => [...prev, ...data.payload.notifications]);
+        soundEffects.playCashout();
+      } else if (data.type === 'RESET_CONTEST') {
+        userBetAccumulatorRef.current.clear();
+        setCelebrationData(null);
+        setIsCelebrationOpen(false);
+        setIsWinnerBurst(false);
+        setIsBucketTrapdoorOpen(false);
+        setOnResetTrigger(p => p + 1);
+        setPresetCascadeKey(data.payload?.key || Date.now());
+        soundEffects.playTokenClink();
+      } else if (data.type === 'CLEAR_ARENA') {
+        userBetAccumulatorRef.current.clear();
+        setOnResetTrigger(p => p + 1);
+        soundEffects.playTokenClink();
+      } else if (data.type === 'CONDENSE_PILE') {
+        setCondenseTrigger(p => p + 1);
+        setJostleTrigger(p => p + 1);
+        soundEffects.playCashout();
+      } else if (data.type === 'JOSTLE_TOKENS') {
+        setJostleTrigger(p => p + 1);
+      } else if (data.type === 'ENGINE_UPDATED' && data.payload?.engine) {
+        setRenderEngine(data.payload.engine);
+      } else if (data.type === 'BUCKET_CONFIG_UPDATED' && data.payload) {
+        setBucketConfig(data.payload);
+      } else if (data.type === 'VIEWER_BET_REQUEST' && data.payload) {
+        // ONLY authoritative Broadcaster dashboard processes viewer bet deductions
+        if (uiMode !== 'full') return;
+
+        const { userId, userName, userConfig, outcomeId, amount } = data.payload;
+        if (!outcomeId || !amount || amount <= 0) return;
+
+        // Security & Moderation: Sanitize viewer token emoji
+        const rawConfig = userConfig || data.payload.tokenConfig;
+        const safeConfig = rawConfig ? { ...rawConfig } : { ...storageService.getDefaultToken() };
+        if (safeConfig.emoji && isImageSource(safeConfig.emoji)) {
+          safeConfig.emoji = '🪙';
+        }
+
+        const curUsers = usersRef.current;
+        let targetUser = curUsers.find(u => u.id === userId || (userName && u.name.toLowerCase() === userName.toLowerCase()));
+        if (!targetUser) {
+          const startingTokens = twitchChatService.getConfig().startingTokens || 50000;
+          const newUser: UserRosterItem = {
+            id: userId || `viewer_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+            name: userName || 'Viewer',
+            tokens: startingTokens,
+            currentBetInput: String(amount),
+            config: safeConfig,
+            isMockUser: false
+          };
+          targetUser = newUser;
+          const nextUsers = [...curUsers, newUser];
+          usersRef.current = nextUsers;
+          setUsers(nextUsers);
+        } else if (rawConfig) {
+          targetUser = {
+            ...targetUser,
+            config: { ...targetUser.config, ...safeConfig }
+          };
+          const nextUsers = curUsers.map(u => u.id === targetUser!.id ? targetUser! : u);
+          usersRef.current = nextUsers;
+          setUsers(nextUsers);
+        }
+
+        if (handleBetRef.current) {
+          handleBetRef.current(targetUser.id, amount, outcomeId);
+        }
+      } else if (data.type === 'VIEWER_TOKEN_UPDATED' && data.payload) {
+        // ONLY authoritative Broadcaster dashboard updates user roster config
+        if (uiMode !== 'full') return;
+
+        const { userId, userName, config } = data.payload;
+        const curUsers = usersRef.current;
+        const targetIndex = curUsers.findIndex(u => u.id === userId || (userName && u.name.toLowerCase() === userName.toLowerCase()));
+        if (targetIndex !== -1 && config) {
+          const safeConfig = { ...config };
+          if (safeConfig.emoji && isImageSource(safeConfig.emoji)) {
+            safeConfig.emoji = '🪙';
+          }
+          const nextUsers = [...curUsers];
+          nextUsers[targetIndex] = {
+            ...nextUsers[targetIndex],
+            config: { ...nextUsers[targetIndex].config, ...safeConfig }
+          };
+          usersRef.current = nextUsers;
+          setUsers(nextUsers);
+        }
+      }
+    });
+    return unsubscribe;
+  }, [uiMode]);
 
   const recalculateOdds = (outcomes: BetOutcome[], totalPool: number, oddsMode?: OddsMode): BetOutcome[] => {
     const currentMode = oddsMode || contestRef.current.oddsMode || 'auto';
@@ -746,53 +936,67 @@ function App() {
     userBetAccumulatorRef.current.set(betKey, newAccumulated);
 
     const isTierMerge = checkTierConsolidation(prevAccumulated, newAccumulated, tokenTiers);
+    const areTokensEnabled = bucketConfig?.enableTokens !== false;
 
-    // 1. Generate Drop Event for 2D/3D physics
-    const event = isTierMerge
-      ? breakdownBet(
-        newAccumulated,
-        user.id,
-        user.name,
-        user.config,
-        silverThreshold,
-        goldThreshold,
-        outcomeId,
-        outcomeName,
-        outcomeColor,
-        true,
-        tokenTiers
-      )
-      : breakdownBet(
-        amount,
-        user.id,
-        user.name,
-        user.config,
-        silverThreshold,
-        goldThreshold,
-        outcomeId,
-        outcomeName,
-        outcomeColor,
-        false,
-        tokenTiers
-      );
+    if (areTokensEnabled) {
+      // 1. Generate Drop Event for 2D/3D physics
+      const event = isTierMerge
+        ? breakdownBet(
+          newAccumulated,
+          user.id,
+          user.name,
+          user.config,
+          silverThreshold,
+          goldThreshold,
+          outcomeId,
+          outcomeName,
+          outcomeColor,
+          true,
+          tokenTiers
+        )
+        : breakdownBet(
+          amount,
+          user.id,
+          user.name,
+          user.config,
+          silverThreshold,
+          goldThreshold,
+          outcomeId,
+          outcomeName,
+          outcomeColor,
+          false,
+          tokenTiers
+        );
 
-    event.userAccumulatedAmount = newAccumulated;
-    setLastDrop(event);
-    soundEffects.playBetDrop();
+      event.userAccumulatedAmount = newAccumulated;
+      setLastDrop(event);
+      soundEffects.playBetDrop();
+    } else {
+      soundEffects.playTokenClink();
+    }
 
     // 2. Add Floating Notification (capped to last 6 items)
+    const notif: FloatingNotification = {
+      id: `drop_${Date.now()}_${Math.random()}`,
+      type: 'drop',
+      userName: user.name,
+      userEmoji: user.config.emoji,
+      amount,
+      outcomeName,
+      timestamp: Date.now(),
+    };
     setFloatingNotifications(prev => [
       ...prev.slice(-5),
-      {
-        id: `drop_${Date.now()}_${Math.random()}`,
-        type: 'drop',
-        userName: user.name,
-        userEmoji: user.config.emoji,
-        amount,
-        outcomeName,
-        timestamp: Date.now(),
-      }
+      notif
     ]);
+
+    // Live sync token drop and notification to OBS overlay (only authoritative broadcaster broadcasts)
+    if (uiMode === 'full') {
+      broadcastStreamSync('TOKEN_DROP_EVENT', {
+        dropEvent: event,
+        notification: notif,
+      });
+    }
 
     // 3. Update User Balance (exact single deduction & immediate ref sync)
     setUsers(prevUsers => {
@@ -1087,36 +1291,47 @@ function App() {
       customLabel: houseName
     };
 
-    const event = breakdownBet(
-      amount,
-      'house',
-      houseName,
-      houseTokenConfig,
-      silverThreshold,
-      goldThreshold,
-      outcomeId,
-      targetOutcome.name || 'Contest',
-      targetOutcome.color || '#f59e0b',
-      false,
-      tokenTiers
-    );
+    const areTokensEnabled = bucketConfig?.enableTokens !== false;
+    if (areTokensEnabled) {
+      const event = breakdownBet(
+        amount,
+        'house',
+        houseName,
+        houseTokenConfig,
+        silverThreshold,
+        goldThreshold,
+        outcomeId,
+        targetOutcome.name || 'Contest',
+        targetOutcome.color || '#f59e0b',
+        false,
+        tokenTiers
+      );
 
-    setLastDrop(event);
-    soundEffects.playBetDrop();
+      setLastDrop(event);
+      soundEffects.playBetDrop();
+    } else {
+      soundEffects.playTokenClink();
+    }
 
     // 2. Add Floating Notification
+    const notif: FloatingNotification = {
+      id: `drop_house_${Date.now()}_${Math.random()}`,
+      type: 'drop',
+      userName: houseName,
+      userEmoji: houseEmoji,
+      amount,
+      outcomeName: targetOutcome.name,
+      timestamp: Date.now(),
+    };
     setFloatingNotifications(prev => [
       ...prev.slice(-5),
-      {
-        id: `drop_house_${Date.now()}_${Math.random()}`,
-        type: 'drop',
-        userName: houseName,
-        userEmoji: houseEmoji,
-        amount,
-        outcomeName: targetOutcome.name,
-        timestamp: Date.now(),
-      }
+      notif
     ]);
+
+    broadcastStreamSync('TOKEN_DROP_EVENT', {
+      dropEvent: event,
+      notification: notif,
+    });
 
     // 3. Update Contest Total Pool & Odds (does NOT deduct from any viewer)
     setContest(prevContest => {
@@ -1169,36 +1384,50 @@ function App() {
       customLabel: 'Prize Pool'
     };
 
-    const event = breakdownBet(
-      amount,
-      'house_pot',
-      houseName,
-      prizeTokenConfig,
-      silverThreshold,
-      goldThreshold,
-      'pot',
-      reason || 'Prize Pool',
-      '#f59e0b',
-      false,
-      tokenTiers
-    );
+    const areTokensEnabled = bucketConfig?.enableTokens !== false;
+    let event: DropEvent | undefined;
 
-    setLastDrop(event);
+    if (areTokensEnabled) {
+      event = breakdownBet(
+        amount,
+        'house_pot',
+        houseName,
+        prizeTokenConfig,
+        silverThreshold,
+        goldThreshold,
+        'pot',
+        reason || 'Prize Pool',
+        '#f59e0b',
+        false,
+        tokenTiers
+      );
+
+      setLastDrop(event);
+    }
     soundEffects.playCashout();
 
     // 2. Add Floating Notification
+    const notif: FloatingNotification = {
+      id: `pot_${Date.now()}_${Math.random()}`,
+      type: 'drop',
+      userName: houseName,
+      userEmoji: '🎁',
+      amount,
+      outcomeName: 'Overall Prize Pool',
+      timestamp: Date.now(),
+    };
     setFloatingNotifications(prev => [
       ...prev.slice(-5),
-      {
-        id: `pot_${Date.now()}_${Math.random()}`,
-        type: 'drop',
-        userName: houseName,
-        userEmoji: '🎁',
-        amount,
-        outcomeName: 'Overall Prize Pool',
-        timestamp: Date.now(),
-      }
+      notif
     ]);
+
+    if (event) {
+      broadcastStreamSync('TOKEN_DROP_EVENT', {
+        dropEvent: event,
+        notification: notif,
+        isPot: true,
+      });
+    }
 
     // 3. Update Contest Total Pool & recalculate Odds for all horses
     setContest(prevContest => {
@@ -1396,6 +1625,12 @@ function App() {
     setIsWinnerBurst(true);
     setJostleTrigger(p => p + 1);
 
+    broadcastStreamSync('WINNER_CELEBRATION', {
+      celebrationData: celebration,
+      isOpen: true,
+      isWinnerBurst: true,
+    });
+
     setContest(prev => ({
       ...prev,
       status: 'resolved',
@@ -1508,10 +1743,15 @@ function App() {
     // Trigger trapdoor in physics bucket so tokens fall through bottom off-screen
     setIsBucketTrapdoorOpen(true);
     setJostleTrigger(p => p + 1);
+    broadcastStreamSync('TRAPDOOR_EVENT', { open: true });
+    broadcastStreamSync('CLOSE_CELEBRATION', {});
+    broadcastStreamSync('FLOATING_NOTIFICATIONS', { notifications: newNotifications });
+
     setTimeout(() => {
       setIsBucketTrapdoorOpen(false);
       // Trip physics switch when floor closes to rejostle and re-settle any tokens remaining in the hopper
       setJostleTrigger(p => p + 1);
+      broadcastStreamSync('TRAPDOOR_EVENT', { open: false });
     }, 3800);
 
     // Audio tally ticking as viewer balances increase
@@ -1648,7 +1888,9 @@ function App() {
       }));
     }
 
-    setPresetCascadeKey(Date.now());
+    const newCascadeKey = Date.now();
+    setPresetCascadeKey(newCascadeKey);
+    broadcastStreamSync('CASCADE_ANIMATION', { key: newCascadeKey });
     soundEffects.playTokenClink();
   };
 
@@ -1689,6 +1931,10 @@ function App() {
 
     setOnResetTrigger(prev => prev + 1);
     soundEffects.playTokenClink();
+    const newCascadeKey = Date.now();
+    setPresetCascadeKey(newCascadeKey);
+    broadcastStreamSync('CASCADE_ANIMATION', { key: newCascadeKey });
+    broadcastStreamSync('RESET_CONTEST', { key: newCascadeKey });
   };
   resetContestRef.current = handleResetContest;
 
@@ -1723,7 +1969,9 @@ function App() {
       });
     }
 
-    setPresetCascadeKey(Date.now());
+    const newCascadeKey = Date.now();
+    setPresetCascadeKey(newCascadeKey);
+    broadcastStreamSync('CASCADE_ANIMATION', { key: newCascadeKey });
   };
 
   // Clear Arena Tokens
@@ -1731,6 +1979,7 @@ function App() {
     userBetAccumulatorRef.current.clear();
     setOnResetTrigger(p => p + 1);
     soundEffects.playTokenClink();
+    broadcastStreamSync('CLEAR_ARENA', {});
   };
 
   // Instant 1-Click "Condense Pile" for all viewer tokens in bucket
@@ -1738,6 +1987,7 @@ function App() {
     setCondenseTrigger(p => p + 1);
     setJostleTrigger(p => p + 1);
     soundEffects.playCashout();
+    broadcastStreamSync('CONDENSE_PILE', {});
   };
 
   // Chat Simulation Engine
@@ -2068,9 +2318,9 @@ function App() {
   return (
     <div className={`app-root ${isOBSMode ? 'obs-mode' : ''} ui-mode-${uiMode}`}>
       {/* Top Navbar */}
-      {!isOBSMode && uiMode !== 'minimal' && uiMode !== 'viewer' && uiMode !== 'config' && (
+      {uiMode !== 'minimal' && uiMode !== 'viewer' && uiMode !== 'config' && (
         <header
-          className="app-topbar cosmos-panel"
+          className={`app-topbar cosmos-panel ${isTopbarCompact ? 'topbar-stream-compact' : ''}`}
           onWheel={(e) => {
             if (e.currentTarget.scrollWidth > e.currentTarget.clientWidth && e.deltaY !== 0) {
               e.currentTarget.scrollLeft += e.deltaY;
@@ -2078,16 +2328,30 @@ function App() {
           }}
         >
           <div className="topbar-branding">
-            <div className="topbar-title-group">
-              <h1 className="topbar-logo-title-wrap">
+            {isTopbarCompact ? (
+              <div
+                className="topbar-hero-icon-box"
+                title="Tokenpile (Stream Mode)"
+                style={{ width: '38px', height: '38px' }}
+              >
                 <img
-                  src={styleService.getImage('tp_logo_long.png')}
+                  src={styleService.getImage('tp_ico.png')}
                   alt="Tokenpile"
-                  className="topbar-logo-img"
+                  className="topbar-hero-icon-img"
                 />
-              </h1>
-              <span className="logo-subtitle">A Token Visualization Engine By ILLOGICOMA</span>
-            </div>
+              </div>
+            ) : (
+              <div className="topbar-title-group">
+                <h1 className="topbar-logo-title-wrap">
+                  <img
+                    src={styleService.getImage('tp_logo_long.png')}
+                    alt="Tokenpile"
+                    className="topbar-logo-img"
+                  />
+                </h1>
+                <span className="logo-subtitle">A Token Visualization Engine By ILLOGICOMA</span>
+              </div>
+            )}
           </div>
 
           {/* Center: Contest Operations Command Center */}
@@ -2176,7 +2440,7 @@ function App() {
 
               {/* 2. Alignment & Debug Guides Toggle (OBS Bound Guide + Bucket Guide at once) */}
               <button
-                className={`cyber-nav-btn btn-icon-only ${isDebugGuidesActive ? 'debug-toggle-on' : ''}`}
+                className={`cyber-nav-btn btn-icon-only btn-guides-toggle ${isDebugGuidesActive ? 'debug-toggle-on' : ''}`}
                 onClick={handleToggleDebugGuides}
                 title={
                   isDebugGuidesActive
@@ -2190,16 +2454,27 @@ function App() {
               {/* 3. Quick 2D / 3D Physics Engine Toggle */}
               <button
                 className={`cyber-nav-btn btn-engine-toggle ${renderEngine === '3d' ? 'active-engine-3d' : 'active-engine-2d'}`}
-                onClick={() => setRenderEngine(renderEngine === '2d' ? '3d' : '2d')}
+                onClick={() => handleToggleRenderEngine(renderEngine === '2d' ? '3d' : '2d')}
                 title={`Current Physics Engine: ${renderEngine.toUpperCase()}. Click to switch to ${renderEngine === '2d' ? '3D' : '2D'}`}
               >
                 <Layers size={14} color={renderEngine === '3d' ? '#38bdf8' : '#d97706'} />
                 <span className="engine-toggle-label">{renderEngine.toUpperCase()}</span>
               </button>
 
+              {/* Jostle / Wake Stuck Tokens */}
+              {bucketConfig.enableTokens !== false && (
+                <button
+                  className={`cyber-nav-btn btn-icon-only btn-jostle ${isJostling ? 'is-jostling' : ''}`}
+                  onClick={handleJostleTokens}
+                  title="Jostle Tokens (Trip physics switch & wake up resting/stuck tokens in the hopper)"
+                >
+                  <RefreshCw size={14} />
+                </button>
+              )}
+
               {/* 4. Bet Log & Audit History */}
               <button
-                className={`cyber-nav-btn ${isBetLogOpen ? 'active-amber' : ''}`}
+                className={`cyber-nav-btn btn-bet-log ${isBetLogOpen ? 'active-amber' : ''}`}
                 onClick={() => setIsBetLogOpen(prev => !prev)}
                 title="Betting History & Log (View who bet on what)"
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.35rem 0.65rem' }}
@@ -2226,7 +2501,7 @@ function App() {
 
               {/* Admin / GM Mode Lock & Unlock Badge */}
               <button
-                className={`cyber-nav-btn ${isAdmin ? 'admin-badge-unlocked' : 'admin-badge-locked'}`}
+                className={`cyber-nav-btn btn-admin-badge ${isAdmin ? 'admin-badge-unlocked' : 'admin-badge-locked'}`}
                 onClick={() => setIsAdminModalOpen(true)}
                 title={isAdmin ? "Streamer GM Admin Controls Unlocked. Click to lock or manage passcode." : "Viewer Mode Active (Admin controls locked). Click to enter Streamer Passcode."}
                 style={{
@@ -2246,7 +2521,7 @@ function App() {
 
               {/* 5. Settings (Icon Only) */}
               <button
-                className="cyber-nav-btn btn-icon-only"
+                className="cyber-nav-btn btn-icon-only btn-settings"
                 onClick={() => {
                   if (!isAdmin) {
                     setIsAdminModalOpen(true);
@@ -2259,22 +2534,32 @@ function App() {
                 <Settings size={15} color="#a855f7" />
               </button>
 
-              {/* 6. Mobile & Twitch Panel Viewer Mode Preview */}
+              {/* 6. Controls (Icon Only) */}
               <button
-                className="cyber-nav-btn btn-icon-only"
-                onClick={() => setUiMode('viewer')}
-                title="Preview Mobile Bet Slip & Viewer Mode (?mode=viewer)"
-              >
-                <Smartphone size={15} color="#ec4899" />
-              </button>
-
-              {/* 7. Controls (Icon Only) */}
-              <button
-                className={`cyber-nav-btn btn-icon-only ${isViewControlsOpen ? 'active' : ''}`}
+                className={`cyber-nav-btn btn-icon-only btn-view-controls-toggle ${isViewControlsOpen ? 'active' : ''}`}
                 onClick={() => setIsViewControlsOpen(prev => !prev)}
                 title="Toggle View, Physics & Camera Controls Menu"
               >
                 <Sliders size={15} color={isViewControlsOpen ? '#d97706' : '#7D6B42'} />
+              </button>
+
+              {/* 7. Stream / OBS Logo Mode Toggle (Collapses controls to right for clean logo area) */}
+              <button
+                className={`cyber-nav-btn btn-topbar-stream-toggle ${isTopbarCompact ? 'is-compact active-amber' : ''}`}
+                onClick={handleToggleTopbarCompact}
+                title={isTopbarCompact ? "Expand Topbar (Show full branding and controls)" : "Stream Mode: Collapse controls to right (Clean logo area for OBS)"}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                  padding: isTopbarCompact ? '0.35rem 0.5rem' : '0.35rem 0.65rem',
+                  borderColor: isTopbarCompact ? '#f59e0b' : undefined,
+                }}
+              >
+                {isTopbarCompact ? <ChevronLeft size={15} color="#fbbf24" /> : <ChevronRight size={15} color="#94a3b8" />}
+                <span className="btn-stream-toggle-text" style={{ fontSize: '0.78rem', fontWeight: 600 }}>
+                  {isTopbarCompact ? 'Expand' : 'Stream Mode'}
+                </span>
               </button>
 
               {/* 8. Presets Dropdown (Rightmost) */}
@@ -2293,7 +2578,7 @@ function App() {
         <div className="topbar-collapsible-tray-wrap">
           <ViewControlsBar
             renderEngine={renderEngine}
-            onToggleRenderEngine={setRenderEngine}
+            onToggleRenderEngine={handleToggleRenderEngine}
             pileLayout={pileLayout}
             onChangePileLayout={setPileLayout}
             cameraAngle={cameraAngle}
@@ -2318,8 +2603,8 @@ function App() {
         </div>
       )}
 
-      {/* Main Grid: FULL MODE (Modular Positionable Layout Engine) */}
-      {uiMode === 'full' && (() => {
+      {/* Main Grid: FULL MODE & OBS OVERLAY MODE (Modular Positionable Layout Engine) */}
+      {(uiMode === 'full' || uiMode === 'obs') && (() => {
         const isLeftVisible = screenLayout.columnArrangement === 'default'
           ? screenLayout.showViewersPanel
           : screenLayout.showEntrantsSidebar;
@@ -2359,6 +2644,7 @@ function App() {
             onUpdateTitle={handleUpdateViewersTitle}
             onOpenIconEditor={handleOpenViewersIconEditor}
             isAdmin={isAdmin}
+            tokenTiers={tokenTiers}
           />
         );
 
@@ -2433,7 +2719,7 @@ function App() {
 
               {/* Center Transparent Area: Reserved for OBS Race Video overlay */}
               <div className="race-visual-center-stage">
-                {showTestRaceBg && (
+                {showTestRaceBg && !isOBSMode && (
                   <div className="simulated-race-backdrop">
                     <span className="sim-race-badge">
                       <Tv size={13} color="#b45309" />
@@ -2517,14 +2803,6 @@ function App() {
         />
       )}
 
-      {/* OBS STREAM OVERLAY MODE */}
-      {uiMode === 'obs' && (
-        <StreamOverlayView
-          contest={contest}
-          onExitOverlayMode={() => setUiMode('full')}
-        />
-      )}
-
       {/* DEDICATED VIEWER / MOBILE BET SLIP MODE */}
       {uiMode === 'viewer' && (
         <ViewerView
@@ -2572,10 +2850,11 @@ function App() {
       {/* Live Token Hopper Bounds Calibration Preview Overlay */}
       <HopperBoundsPreviewOverlay
         isVisible={
+          !isOBSMode &&
           uiMode !== 'viewer' && (
             bucketConfig.showCalibrationGuide ||
             isDebugGuidesActive ||
-            (!isOBSMode && isViewControlsOpen && controlsTrayTab === 'bucket') ||
+            (isViewControlsOpen && controlsTrayTab === 'bucket') ||
             isAdjustingHopperBounds
           )
         }
@@ -2587,21 +2866,28 @@ function App() {
         onAdjusting={setIsAdjustingHopperBounds}
       />
 
-      {/* PERSISTENT PHYSICS ENGINES (Only active engine receives dropEvent and simulates physics; disabled in viewer mode) */}
+      {/* Hopper Custom-Positioned Themed Panel Backdrop */}
+      <HopperBackdropPanel
+        bucketConfig={bucketConfig}
+        pileLayout={pileLayout}
+        isVisible={uiMode !== 'viewer'}
+      />
+
+      {/* PERSISTENT PHYSICS ENGINES (Only active engine receives dropEvent and simulates physics; disabled in viewer mode or if tokens disabled) */}
       <PhysicsScene2D
-        dropEvent={renderEngine === '2d' ? lastDrop : null}
+        dropEvent={renderEngine === '2d' && bucketConfig.enableTokens !== false ? lastDrop : null}
         pileLayout={pileLayout}
         bucketConfig={bucketConfig}
         onResetTrigger={onResetTrigger}
         condenseTrigger={condenseTrigger}
         jostleTrigger={jostleTrigger}
         isWinnerBurst={isWinnerBurst}
-        isVisible={uiMode !== 'viewer' && renderEngine === '2d'}
+        isVisible={uiMode !== 'viewer' && renderEngine === '2d' && bucketConfig.enableTokens !== false}
         isBucketTrapdoorOpen={isBucketTrapdoorOpen}
       />
 
       <PhysicsScene
-        dropEvent={renderEngine === '3d' ? lastDrop : null}
+        dropEvent={renderEngine === '3d' && bucketConfig.enableTokens !== false ? lastDrop : null}
         thickness={thickness}
         pileOffset={pileOffset}
         users={users}
@@ -2610,7 +2896,7 @@ function App() {
         condenseTrigger={condenseTrigger}
         jostleTrigger={jostleTrigger}
         cameraAngle={cameraAngle}
-        isVisible={uiMode !== 'viewer' && renderEngine === '3d'}
+        isVisible={uiMode !== 'viewer' && renderEngine === '3d' && bucketConfig.enableTokens !== false}
         bucketConfig={bucketConfig}
         pileLayout={pileLayout}
         isBucketTrapdoorOpen={isBucketTrapdoorOpen}
@@ -2651,7 +2937,10 @@ function App() {
       <WinnerCelebrationModal
         data={celebrationData}
         isOpen={isCelebrationOpen}
-        onClose={() => setIsCelebrationOpen(false)}
+        onClose={() => {
+          setIsCelebrationOpen(false);
+          broadcastStreamSync('CLOSE_CELEBRATION', {});
+        }}
         onConfirmPayouts={handleConfirmPayouts}
         headerConfig={celebrationHeader}
         onUpdateHeaderConfig={handleUpdateCelebrationHeader}
@@ -2675,7 +2964,10 @@ function App() {
         onOpenDefaultTokenEditor={handleOpenDefaultTokenEditor}
         defaultTokenConfig={defaultTokenConfig}
         tokenTiers={tokenTiers}
-        onUpdateTokenTiers={setTokenTiers}
+        onUpdateTokenTiers={(tiers) => {
+          setTokenTiers(tiers);
+          reloadTierConfigs(tiers);
+        }}
         layoutConfig={screenLayout}
         onUpdateLayoutConfig={handleUpdateScreenLayout}
         themeConfig={themeConfig}

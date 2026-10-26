@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TokenPile • Multi-View Testbench & Simulator</title>
+  <link rel="icon" type="image/png" href="/tp_ico.png" />
+  <style>
+    @font-face {
+      font-family: 'Merge One';
+      src: url('/MergeOne-Regular.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #120f0c;
+      color: #f1ede4;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Header & Nav */
+    header {
+      background: #181512;
+      border-bottom: 1.5px solid rgba(125, 107, 66, 0.3);
+      padding: 0.65rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-shrink: 0;
+      z-index: 10;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .brand img {
+      width: 26px;
+      height: 26px;
+    }
+
+    .brand h1 {
+      font-family: 'Merge One', system-ui, sans-serif;
+      font-size: 1.15rem;
+      font-weight: 400;
+      color: #fbbf24;
+      letter-spacing: 0.2px;
+    }
+
+    .brand span {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #d97706;
+      background: rgba(217, 119, 6, 0.12);
+      border: 1px solid rgba(217, 119, 6, 0.28);
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    .nav-modes {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: #0f0d0a;
+      padding: 4px;
+      border-radius: 10px;
+      border: 1.5px solid rgba(125, 107, 66, 0.25);
+    }
+
+    .mode-btn {
+      background: transparent;
+      color: #b8a995;
+      border: none;
+      padding: 0.45rem 0.9rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-family: inherit;
+    }
+
+    .mode-btn:hover {
+      color: #fef3c7;
+      background: rgba(251, 191, 36, 0.1);
+    }
+
+    .mode-btn.active {
+      background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
+      color: #181512;
+      border-bottom: 2px solid #b45309;
+      box-shadow: 0 2px 8px rgba(217, 119, 6, 0.4);
+    }
+
+    .direct-links {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .direct-link-btn {
+      background: rgba(217, 119, 6, 0.08);
+      border: 1.5px solid rgba(125, 107, 66, 0.28);
+      color: #d4c3b3;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.35rem 0.75rem;
+      border-radius: 7px;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+
+    .direct-link-btn:hover {
+      background: rgba(251, 191, 36, 0.16);
+      color: #fef3c7;
+      border-color: #d97706;
+    }
+
+    /* Main Stage Views */
+    main {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: #110e0c;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(217, 119, 6, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(72, 188, 0, 0.04) 0%, transparent 50%);
+    }
+
+    .view-container {
+      position: absolute;
+      inset: 0;
+      display: none;
+      width: 100%;
+      height: 100%;
+    }
+
+    .view-container.active {
+      display: flex;
+    }
+
+    /* Side-by-Side Studio View */
+    .split-view {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+
+    .split-left {
+      flex: 1;
+      height: 100%;
+      border-right: 1.5px solid rgba(125, 107, 66, 0.25);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .split-right {
+      width: 360px;
+      height: 100%;
+      background: #14110e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 1.25rem 0;
+      overflow-y: auto;
+    }
+
+    /* Simulated Twitch Panel Container (318px standard) */
+    .twitch-panel-device {
+      width: 318px;
+      height: 540px;
+      background: #EDE8DF;
+      border: 2px solid rgba(125, 107, 66, 0.35);
+      border-radius: 12px;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(251, 191, 36, 0.15);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .twitch-panel-header {
+      background: #F1F0E4;
+      border-bottom: 1.5px solid rgba(125, 107, 66, 0.25);
+      padding: 9px 14px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #5A4A28;
+      font-family: 'Merge One', system-ui, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .twitch-panel-header span.tag {
+      background: #9146ff;
+      color: #ffffff;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      font-family: system-ui, sans-serif;
+      box-shadow: 0 1px 3px rgba(145, 70, 255, 0.4);
+    }
+
+    /* Simulated Mobile Device (375px x 667px) */
+    .mobile-device-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      padding: 1.5rem;
+    }
+
+    .mobile-device {
+      width: 375px;
+      height: 680px;
+      max-height: 95%;
+      background: #EDE8DF;
+      border: 4px solid #3d3429;
+      border-radius: 40px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 0 2px rgba(125, 107, 66, 0.4);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .mobile-notch {
+      height: 24px;
+      background: #241f18;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #a89885;
+    }
+
+    /* Full View Iframe */
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: transparent;
+    }
+
+    .pane-header {
+      padding: 8px 14px;
+      background: #181512;
+      border-bottom: 1.5px solid rgba(125, 107, 66, 0.25);
+      font-size: 0.78rem;
+      color: #d4c3b3;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Topbar -->
+  <header>
+    <div class="brand">
+      <img src="/tp_ico.png" alt="Logo" />
+      <h1>TokenPile Studio Testbench</h1>
+      <span>Local Multi-View Simulator</span>
+    </div>
+
+    <!-- Mode Switcher -->
+    <div class="nav-modes">
+      <button class="mode-btn active" onclick="switchView('split')">
+        🔲 Split View (Dashboard + Panel)
+      </button>
+      <button class="mode-btn" onclick="switchView('panel')">
+        👾 Twitch Panel (318px)
+      </button>
+      <button class="mode-btn" onclick="switchView('mobile')">
+        📱 Mobile View (viewer.html)
+      </button>
+      <button class="mode-btn" onclick="switchView('config')">
+        ⚙️ Extension Config (config.html)
+      </button>
+      <button class="mode-btn" onclick="switchView('obs')">
+        📺 OBS Video Overlay (?obs=1)
+      </button>
+    </div>
+
+    <!-- Direct Tab Links -->
+    <div class="direct-links">
+      <a class="direct-link-btn" href="/index.html?mode=dashboard" target="_blank" title="Open full Broadcaster GM view in new tab">
+        ↗ index.html
+      </a>
+      <a class="direct-link-btn" href="/panel.html" target="_blank" title="Open panel in new tab">
+        ↗ panel.html
+      </a>
+      <a class="direct-link-btn" href="/config.html" target="_blank" title="Open config in new tab">
+        ↗ config.html
+      </a>
+      <a class="direct-link-btn" href="/viewer.html" target="_blank" title="Open mobile viewer in new tab">
+        ↗ viewer.html
+      </a>
+      <a class="direct-link-btn" href="/obs.html" target="_blank" title="Open OBS overlay in new tab">
+        ↗ obs.html
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Views -->
+  <main>
+    <!-- 1. Split View: GM Dashboard on Left, Live 318px Twitch Panel on Right -->
+    <div id="view-split" class="view-container active">
+      <div class="split-view">
+        <div class="split-left">
+          <div class="pane-header">
+            <span>🖥️ Broadcaster Dashboard (index.html)</span>
+            <span style="color: #10b981;">● Synchronized via BroadcastChannel</span>
+          </div>
+          <iframe id="iframe-gm" src="/index.html?mode=dashboard"></iframe>
+        </div>
+
+        <div class="split-right">
+          <div style="font-size: 0.78rem; color: #d4c3b3; margin-bottom: 0.6rem; font-weight: 700; font-family: 'Merge One', system-ui, sans-serif;">
+            Twitch Channel Panel Preview (318px)
+          </div>
+          <div class="twitch-panel-device">
+            <div class="twitch-panel-header">
+              <span>TokenPile • Stream Betting</span>
+              <span class="tag">Extension</span>
+            </div>
+            <iframe id="iframe-panel" src="/panel.html"></iframe>
+          </div>
+          <div style="font-size: 0.7rem; color: #a89885; margin-top: 0.75rem; max-width: 300px; text-align: center; line-height: 1.4;">
+            💡 Place a bet in this panel! You'll see the coins instantly clink &amp; drop in the broadcaster dashboard
+            on the left.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Isolated Twitch Panel (318px Container) - Lazy loaded -->
+    <div id="view-panel" class="view-container">
+      <div
+        style="display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; flex-direction: column;">
+        <div style="font-size: 0.85rem; color: #d4c3b3; margin-bottom: 0.8rem; font-weight: 700; font-family: 'Merge One', system-ui, sans-serif;">
+          Twitch Panel Dimensions: 318px width × 500px height
+        </div>
+        <div class="twitch-panel-device" style="height: 520px;">
+          <div class="twitch-panel-header">
+            <span>TokenPile • Stream Betting</span>
+            <span class="tag">Extension</span>
+          </div>
+          <iframe data-src="/panel.html" src="about:blank"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Mobile Device View (viewer.html) - Lazy loaded -->
+    <div id="view-mobile" class="view-container">
+      <div class="mobile-device-wrap">
+        <div class="mobile-device">
+          <div class="mobile-notch">9:41 • 5G</div>
+          <iframe data-src="/viewer.html" src="about:blank"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Twitch Extension Config View (config.html) - Lazy loaded -->
+    <div id="view-config" class="view-container" style="overflow: hidden; width: 100%; height: 100%;">
+      <iframe data-src="/config.html" src="about:blank" scrolling="yes" style="width: 100%; height: 100%; border: none;"></iframe>
+    </div>
+
+    <!-- 5. OBS Stream Video Overlay View (?obs=1) - Lazy loaded & unloaded on switch to release WebGL GPU memory -->
+    <div id="view-obs" class="view-container"
+      style="background: radial-gradient(circle at 50% 40%, #1e1b4b 0%, #0f172a 75%, #020617 100%); position: relative;">
+      <div
+        style="position: absolute; top: 12px; left: 16px; z-index: 10; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(251, 191, 36, 0.4); border-radius: 8px; padding: 6px 14px; font-size: 0.78rem; color: #fbbf24; font-weight: 700; box-shadow: 0 4px 16px rgba(0,0,0,0.5);">
+        📺 Simulated OBS Stream Video Layer &bull; <span style="color: #38bdf8;">Background is 100% transparent so your
+          game/stream video shows through!</span>
+      </div>
+      <iframe data-src="/obs.html" src="about:blank"></iframe>
+    </div>
+  </main>
+
+  <script>
+    let currentView = 'split';
+
+    function switchView(viewName) {
+      if (viewName === currentView) return;
+
+      // 1. Unload auxiliary / heavy preview iframes when switching away to release WebGL contexts, WASM memory, and SSE connections
+      if (currentView !== 'split') {
+        const prevContainer = document.getElementById('view-' + currentView);
+        if (prevContainer) {
+          prevContainer.querySelectorAll('iframe[data-src]').forEach(iframe => {
+            iframe.src = 'about:blank';
+          });
+        }
+      }
+
+      currentView = viewName;
+
+      // 2. Update active view containers
+      document.querySelectorAll('.view-container').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.mode-btn').forEach(el => el.classList.remove('active'));
+
+      const target = document.getElementById('view-' + viewName);
+      if (target) {
+        target.classList.add('active');
+        // Lazy-load iframes on demand
+        target.querySelectorAll('iframe[data-src]').forEach(iframe => {
+          if (!iframe.src || iframe.src === 'about:blank' || !iframe.src.includes(iframe.dataset.src)) {
+            iframe.src = iframe.dataset.src;
+          }
+        });
+      }
+
+      const btns = document.querySelectorAll('.mode-btn');
+      btns.forEach(btn => {
+        if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(viewName)) {
+          btn.classList.add('active');
+        }
+      });
+    }
+  </script>
+</body>
+
+</html>

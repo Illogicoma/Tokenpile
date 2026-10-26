@@ -63,8 +63,8 @@ const COLOR_PRESETS = [
 
 export const ViewerView: React.FC<ViewerViewProps> = ({
   contest: initialContest,
-  onExitViewerMode,
-  isAdmin = false
+  onExitViewerMode: _onExitViewerMode,
+  isAdmin: _isAdmin = false
 }) => {
   // Live synced contest state
   const [liveContest, setLiveContest] = useState<Contest>(initialContest);
@@ -91,7 +91,7 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
         const c = params.get('channel') || params.get('room') || params.get('c');
         if (c) return c.trim().toLowerCase();
       }
-      return localStorage.getItem('anytoken_viewer_channel') || '';
+      return localStorage.getItem('TokenPile_viewer_channel') || '';
     } catch {
       return '';
     }
@@ -99,7 +99,7 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
 
   const [usernameInput, setUsernameInput] = useState<string>(() => {
     try {
-      const stored = localStorage.getItem('anytoken_viewer_username');
+      const stored = localStorage.getItem('TokenPile_viewer_username');
       if (stored) return stored.trim();
     } catch { }
     return `Lucky_${Math.floor(100 + Math.random() * 900)}`;
@@ -107,7 +107,7 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
 
   const [tokenConfig, setTokenConfig] = useState<UserTokenConfig>(() => {
     try {
-      const stored = localStorage.getItem('anytoken_viewer_token_config');
+      const stored = localStorage.getItem('TokenPile_viewer_token_config');
       if (stored) {
         const parsed = JSON.parse(stored);
         if (parsed.emoji && isImageSource(parsed.emoji)) {
@@ -127,7 +127,7 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
 
   const [tokensBalance, setTokensBalance] = useState<number>(() => {
     try {
-      const stored = localStorage.getItem('anytoken_viewer_balance');
+      const stored = localStorage.getItem('TokenPile_viewer_balance');
       if (stored) {
         const parsed = parseInt(stored, 10);
         if (!isNaN(parsed) && parsed >= 0) return parsed;
@@ -162,7 +162,7 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
           }
         }
       }
-      return Boolean(localStorage.getItem('anytoken_viewer_channel'));
+      return Boolean(localStorage.getItem('TokenPile_viewer_channel'));
     } catch {
       return false;
     }
@@ -202,17 +202,17 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
   const [activeTab, setActiveTab] = useState<'slip' | 'coin' | 'history'>('slip');
   const [viewerTheme, setViewerTheme] = useState<'dark' | 'light'>(() => {
     try {
-      const stored = localStorage.getItem('anytoken_viewer_theme');
+      const stored = localStorage.getItem('TokenPile_viewer_theme');
       if (stored === 'light' || stored === 'dark') return stored;
     } catch { }
-    return 'dark';
+    return 'light';
   });
 
   const toggleViewerTheme = () => {
     const next = viewerTheme === 'dark' ? 'light' : 'dark';
     setViewerTheme(next);
     try {
-      localStorage.setItem('anytoken_viewer_theme', next);
+      localStorage.setItem('TokenPile_viewer_theme', next);
     } catch { }
     soundEffects.playTokenClink();
   };
@@ -223,7 +223,7 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
   // Active Bet in the current race
   const [activeBet, setActiveBet] = useState<ViewerBetHistoryItem | null>(() => {
     try {
-      const stored = localStorage.getItem('anytoken_viewer_active_bet');
+      const stored = localStorage.getItem('TokenPile_viewer_active_bet');
       if (stored) return JSON.parse(stored);
     } catch { }
     return null;
@@ -236,7 +236,7 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
   // Personal Betting History
   const [betHistory, setBetHistory] = useState<ViewerBetHistoryItem[]>(() => {
     try {
-      const stored = localStorage.getItem('anytoken_viewer_history');
+      const stored = localStorage.getItem('TokenPile_viewer_history');
       if (stored) return JSON.parse(stored);
     } catch { }
     return [];
@@ -253,23 +253,23 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
   // Persist balance & active bet
   useEffect(() => {
     try {
-      localStorage.setItem('anytoken_viewer_balance', String(tokensBalance));
+      localStorage.setItem('TokenPile_viewer_balance', String(tokensBalance));
     } catch { }
   }, [tokensBalance]);
 
   useEffect(() => {
     try {
       if (activeBet) {
-        localStorage.setItem('anytoken_viewer_active_bet', JSON.stringify(activeBet));
+        localStorage.setItem('TokenPile_viewer_active_bet', JSON.stringify(activeBet));
       } else {
-        localStorage.removeItem('anytoken_viewer_active_bet');
+        localStorage.removeItem('TokenPile_viewer_active_bet');
       }
     } catch { }
   }, [activeBet]);
 
   useEffect(() => {
     try {
-      localStorage.setItem('anytoken_viewer_history', JSON.stringify(betHistory));
+      localStorage.setItem('TokenPile_viewer_history', JSON.stringify(betHistory));
     } catch { }
   }, [betHistory]);
 
@@ -337,9 +337,9 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
     }
 
     try {
-      localStorage.setItem('anytoken_viewer_channel', cleanChan);
-      localStorage.setItem('anytoken_viewer_username', cleanUser);
-      localStorage.setItem('anytoken_viewer_token_config', JSON.stringify(tokenConfig));
+      localStorage.setItem('TokenPile_viewer_channel', cleanChan);
+      localStorage.setItem('TokenPile_viewer_username', cleanUser);
+      localStorage.setItem('TokenPile_viewer_token_config', JSON.stringify(tokenConfig));
     } catch { }
 
     setIsConnected(true);
@@ -354,7 +354,7 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
     }
     setIsConnected(false);
     try {
-      localStorage.removeItem('anytoken_viewer_channel');
+      localStorage.removeItem('TokenPile_viewer_channel');
     } catch { }
     soundEffects.playTokenClink();
   };
@@ -516,7 +516,7 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
         </div>
         <div className="viewer-join-screen">
           <div className="viewer-join-card">
-            <div className="viewer-brand-logo">🐎 ANYTOKEN</div>
+            <div className="viewer-brand-logo">🐎 TokenPile</div>
             <div className="viewer-brand-tagline">Interactive Stream Racing & Betting</div>
 
             <form onSubmit={handleJoinRoom}>
@@ -578,15 +578,18 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
               bottom: '20px',
               left: '50%',
               transform: 'translateX(-50%)',
-              background: 'rgba(15, 23, 42, 0.95)',
-              color: '#fbbf24',
-              padding: '8px 16px',
+              background: 'var(--vm-card-bg-elevated, #FDFCF7)',
+              color: 'var(--vm-text-primary, #5A4A28)',
+              padding: '8px 18px',
               borderRadius: '999px',
-              border: '1px solid rgba(251, 191, 36, 0.4)',
-              fontSize: '0.8rem',
+              border: '1.5px solid var(--vm-border-active, #d97706)',
+              fontSize: '0.82rem',
               fontWeight: 700,
-              boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
               zIndex: 100,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem'
             }}
           >
             {toastMessage}
@@ -637,28 +640,6 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
             >
               {isMuted ? <VolumeX size={15} color="#ef4444" /> : <Volume2 size={15} color="#10b981" />}
             </button>
-
-            {/* If Streamer/Admin, link to GM Mode */}
-            {isAdmin && onExitViewerMode && (
-              <button
-                type="button"
-                className="icon-btn-ghost"
-                onClick={onExitViewerMode}
-                title="Switch back to GM Full Mode"
-                style={{
-                  fontSize: '0.65rem',
-                  fontWeight: 800,
-                  color: '#fbbf24',
-                  background: 'rgba(251, 191, 36, 0.15)',
-                  border: '1px solid rgba(251, 191, 36, 0.4)',
-                  padding: '2px 6px',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                GM
-              </button>
-            )}
 
             {/* Token Balance */}
             <div className="viewer-balance-pill">
@@ -730,8 +711,8 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
                   <span>{liveContest.status === 'open' ? 'BETS OPEN' : liveContest.status === 'locked' ? 'RACE IN PROGRESS' : 'RESOLVED'}</span>
                 </span>
 
-                <div style={{ fontSize: '0.78rem', color: '#94a3b8', fontFamily: 'monospace' }}>
-                  Pool: <strong style={{ color: '#fbbf24' }}>{liveContest.totalPool.toLocaleString()}</strong> pts
+                <div style={{ fontSize: '0.78rem', color: 'var(--vm-text-muted)', fontFamily: 'var(--font-family-mono, monospace)' }}>
+                  Pool: <strong style={{ color: 'var(--vm-accent-gold)' }}>{liveContest.totalPool.toLocaleString()}</strong> pts
                 </div>
               </div>
             </div>
@@ -760,10 +741,10 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
 
             {/* Entrants / Runners List */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.2rem' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: '#94a3b8' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--vm-text-muted)' }}>
                 Pick a Runner to Bet:
               </span>
-              <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
+              <span style={{ fontSize: '0.72rem', color: 'var(--vm-text-muted)', fontFamily: 'var(--font-family-mono, monospace)' }}>
                 {liveContest.outcomes.length} horses
               </span>
             </div>
@@ -834,10 +815,10 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
         {activeTab === 'coin' && (
           <div className="viewer-coin-studio">
             <div style={{ textAlign: 'center', marginBottom: '0.25rem' }}>
-              <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#f1f5f9' }}>
+              <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--vm-text-primary)', fontFamily: "var(--font-family-display, 'Twemoji Country Flags', 'Merge One', system-ui, sans-serif)" }}>
                 Personal 3D Coin Studio
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--vm-text-muted)' }}>
                 Customized tokens appear when you drop bets on stream
               </div>
             </div>
@@ -933,7 +914,7 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
               className="viewer-join-btn"
               onClick={() => {
                 try {
-                  localStorage.setItem('anytoken_viewer_token_config', JSON.stringify(tokenConfig));
+                  localStorage.setItem('TokenPile_viewer_token_config', JSON.stringify(tokenConfig));
                   const effectiveUserId = isIdentityShared && twitchExtensionService.getUserId()
                     ? `twitch_${twitchExtensionService.getUserId()}`
                     : `viewer_${usernameInput.toLowerCase()}`;
@@ -1149,14 +1130,14 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
             bottom: selectedOutcome ? '120px' : '20px',
             left: '50%',
             transform: 'translateX(-50%)',
-            background: 'rgba(15, 23, 42, 0.95)',
-            color: '#fbbf24',
-            padding: '8px 16px',
+            background: 'var(--vm-card-bg-elevated, #FDFCF7)',
+            color: 'var(--vm-text-primary, #5A4A28)',
+            padding: '8px 18px',
             borderRadius: '999px',
-            border: '1px solid rgba(251, 191, 36, 0.4)',
-            fontSize: '0.8rem',
+            border: '1.5px solid var(--vm-border-active, #d97706)',
+            fontSize: '0.82rem',
             fontWeight: 700,
-            boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
             zIndex: 100,
             maxWidth: '90%',
             textAlign: 'center',

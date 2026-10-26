@@ -1,19 +1,22 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link id="app-favicon" rel="icon" type="image/png" href="/tp_ico.png" />
-    <link rel="shortcut icon" href="/tp_ico.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AnyToken • Twitch Extension Panel</title>
-    <!-- Official Twitch Extension Helper SDK -->
-    <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script>
-      window.__ANYTOKEN_MODE__ = 'panel';
-    </script>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <link id="app-favicon" rel="icon" type="image/png" href="/tp_ico.png" />
+  <link rel="shortcut icon" href="/tp_ico.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TokenPile • Twitch Extension Panel</title>
+  <!-- Official Twitch Extension Helper SDK -->
+  <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
+  <script>
+    window.__TokenPile_MODE__ = 'panel';
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>

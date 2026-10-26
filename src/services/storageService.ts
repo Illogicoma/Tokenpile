@@ -2,24 +2,24 @@ import type { SavedPreset, UserTokenConfig, BucketConfig, ScreenLayoutConfig, Th
 import { styleService } from './styleService';
 import { twitchExtensionService } from './twitchExtensionService';
 
-const PRESETS_KEY = 'anytoken_custom_presets';
-const MATERIAL_PRESETS_KEY = 'anytoken_custom_material_presets';
-const USER_TOKENS_KEY = 'anytoken_user_tokens';
-const DEFAULT_TOKEN_KEY = 'anytoken_default_token';
-const DEBUG_MODE_KEY = 'anytoken_debug_mode';
-const BUCKET_CONFIG_KEY = 'anytoken_bucket_config';
-const SCREEN_LAYOUT_KEY = 'anytoken_screen_layout';
-const THEME_CONFIG_KEY = 'anytoken_theme_config';
-const CUSTOM_THEME_PRESETS_KEY = 'anytoken_custom_theme_presets';
-const TOKEN_TIERS_KEY = 'anytoken_token_tiers';
-const PANELS_CONFIG_KEY = 'anytoken_panels_config';
-const CONTEST_STORAGE_KEY = 'anytoken_active_contest';
-const USERS_ROSTER_KEY = 'anytoken_users_roster';
-const TWITCH_CHAT_KEY = 'anytoken_twitch_chat_config';
-const CELEBRATION_HEADER_KEY = 'anytoken_celebration_header_config';
-const ACTIVE_STYLE_KEY = 'anytoken_active_style';
-const ADMIN_PASSCODE_KEY = 'anytoken_admin_passcode';
-const ADMIN_UNLOCKED_KEY = 'anytoken_admin_unlocked';
+const PRESETS_KEY = 'TokenPile_custom_presets';
+const MATERIAL_PRESETS_KEY = 'TokenPile_custom_material_presets';
+const USER_TOKENS_KEY = 'TokenPile_user_tokens';
+const DEFAULT_TOKEN_KEY = 'TokenPile_default_token';
+const DEBUG_MODE_KEY = 'TokenPile_debug_mode';
+const BUCKET_CONFIG_KEY = 'TokenPile_bucket_config';
+const SCREEN_LAYOUT_KEY = 'TokenPile_screen_layout';
+const THEME_CONFIG_KEY = 'TokenPile_theme_config';
+const CUSTOM_THEME_PRESETS_KEY = 'TokenPile_custom_theme_presets';
+const TOKEN_TIERS_KEY = 'TokenPile_token_tiers';
+const PANELS_CONFIG_KEY = 'TokenPile_panels_config';
+const CONTEST_STORAGE_KEY = 'TokenPile_active_contest';
+const USERS_ROSTER_KEY = 'TokenPile_users_roster';
+const TWITCH_CHAT_KEY = 'TokenPile_twitch_chat_config';
+const CELEBRATION_HEADER_KEY = 'TokenPile_celebration_header_config';
+const ACTIVE_STYLE_KEY = 'TokenPile_active_style';
+const ADMIN_PASSCODE_KEY = 'TokenPile_admin_passcode';
+const ADMIN_UNLOCKED_KEY = 'TokenPile_admin_unlocked';
 const DEFAULT_ADMIN_PASSCODE = 'admin123';
 
 // BroadcastChannel for instant OBS Browser Source <-> Admin Control sync
@@ -29,21 +29,51 @@ const CLIENT_ID = typeof crypto !== 'undefined' && 'randomUUID' in crypto
   : `client_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
 const syncChannel = typeof window !== 'undefined' && 'BroadcastChannel' in window
-  ? new BroadcastChannel('anytoken_stream_sync')
+  ? new BroadcastChannel('TokenPile_stream_sync')
   : null;
 
 let lastSavedUsersJson = '';
 let lastSavedContestJson = '';
 
+// Bounded deduplication registry to discard duplicate events delivered over both BroadcastChannel and SSE
+const processedMsgIds = new Set<string>();
+function isDuplicateMessage(msgId?: string): boolean {
+  if (!msgId) return false;
+  if (processedMsgIds.has(msgId)) return true;
+  processedMsgIds.add(msgId);
+  if (processedMsgIds.size > 300) {
+    const oldest = processedMsgIds.values().next().value;
+    if (oldest) processedMsgIds.delete(oldest);
+  }
+  return false;
+}
+
 export const broadcastStreamSync = (type: string, payload: any) => {
+  const msgId = `${CLIENT_ID}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  processedMsgIds.add(msgId);
+
+  const message = {
+    type,
+    payload,
+    timestamp: Date.now(),
+    senderId: CLIENT_ID,
+    msgId
+  };
+
   try {
-    syncChannel?.postMessage({
-      type,
-      payload,
-      timestamp: Date.now(),
-      senderId: CLIENT_ID
-    });
+    syncChannel?.postMessage(message);
   } catch { }
+
+  // Forward to local server SSE relay (connects Chrome tab to OBS Studio CEF)
+  if (typeof window !== 'undefined') {
+    try {
+      fetch('/api/sync/broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(message)
+      }).catch(() => { });
+    } catch { }
+  }
 
   // Forward to Twitch Extension PubSub
   try {
@@ -58,32 +88,78 @@ export const broadcastStreamSync = (type: string, payload: any) => {
   } catch { }
 };
 
-export const onStreamSync = (callback: (data: { type: string; payload: any; timestamp?: number; senderId?: string }) => void) => {
-  const unsubBroadcast = (() => {
-    if (!syncChannel) return () => { };
-    const handler = (e: MessageEvent) => {
-      if (e.data && e.data.type) {
-        // Discard our own broadcasts to prevent self-echoes
-        if (e.data.senderId === CLIENT_ID) return;
-        callback(e.data);
-      }
-    };
-    syncChannel.addEventListener('message', handler);
-    return () => syncChannel.removeEventListener('message', handler);
-  })();
+type SyncCallback = (data: { type: string; payload: any; timestamp?: number; senderId?: string; msgId?: string }) => void;
+const syncCallbacks = new Set<SyncCallback>();
+let sharedSSE: EventSource | null = null;
 
-  const unsubPubSub = twitchExtensionService.onPubSubMessage((msg) => {
-    callback({
-      type: msg.type,
-      payload: msg.payload,
-      timestamp: msg.timestamp,
-      senderId: msg.senderId
-    });
+function dispatchToCallbacks(data: any) {
+  if (!data || !data.type) return;
+  // Discard our own broadcasts to prevent self-echoes
+  if (data.senderId === CLIENT_ID) return;
+  // Discard duplicate messages arriving via both BroadcastChannel and SSE
+  if (data.msgId && isDuplicateMessage(data.msgId)) return;
+
+  for (const cb of syncCallbacks) {
+    try {
+      cb(data);
+    } catch (e) {
+      console.error('[StreamSync] Callback error:', e);
+    }
+  }
+}
+
+// Single module-level listener for BroadcastChannel
+if (syncChannel) {
+  syncChannel.addEventListener('message', (e: MessageEvent) => {
+    if (e.data && e.data.type) {
+      dispatchToCallbacks(e.data);
+    }
   });
+}
+
+// Single module-level listener for Twitch PubSub
+twitchExtensionService.onPubSubMessage((msg) => {
+  dispatchToCallbacks({
+    type: msg.type,
+    payload: msg.payload,
+    timestamp: msg.timestamp,
+    senderId: msg.senderId
+  });
+});
+
+function ensureSSEConnection() {
+  if (typeof window === 'undefined' || !('EventSource' in window)) return;
+  if (sharedSSE) return;
+
+  try {
+    sharedSSE = new EventSource('/api/sync/events');
+    sharedSSE.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        if (data) {
+          dispatchToCallbacks(data);
+        }
+      } catch { }
+    };
+  } catch { }
+}
+
+function releaseSSEConnection() {
+  if (syncCallbacks.size === 0 && sharedSSE) {
+    try {
+      sharedSSE.close();
+    } catch { }
+    sharedSSE = null;
+  }
+}
+
+export const onStreamSync = (callback: SyncCallback) => {
+  syncCallbacks.add(callback);
+  ensureSSEConnection();
 
   return () => {
-    unsubBroadcast();
-    unsubPubSub();
+    syncCallbacks.delete(callback);
+    releaseSSEConnection();
   };
 };
 
@@ -101,6 +177,8 @@ export const DEFAULT_BUCKET_CONFIG: BucketConfig = {
   bottomMargin: 24,
   height: 240,
   hideWalls: true,
+  backgroundVisible: false,
+  enableTokens: true,
   showCalibrationGuide: false,
   combineThresholdPerUser: 40,
   maxArenaTokens: 800,
@@ -356,13 +434,13 @@ function adjustHexLightness(hex: string, percent: number): string {
 }
 
 export const DEFAULT_TIER_CONFIGS: TierConfig[] = [
-  { tier: 'colossal',  name: 'Colossal',  value: 1000000, tint: '#ef4444', metalBoost: 1.0,  roughOverride: 0.02, radius2D: 34, scale3D: 2.20 },
-  { tier: 'legendary', name: 'Legendary', value: 100000,  tint: '#f59e0b', metalBoost: 1.0,  roughOverride: 0.04, radius2D: 28, scale3D: 1.70 },
-  { tier: 'mythic',    name: 'Mythic',    value: 25000,   tint: '#a855f7', metalBoost: 1.0,  roughOverride: 0.06, radius2D: 24, scale3D: 1.45 },
-  { tier: 'platinum',  name: 'Platinum',  value: 5000,    tint: '#06b6d4', metalBoost: 1.0,  roughOverride: 0.08, radius2D: 20, scale3D: 1.25 },
-  { tier: 'gold',      name: 'Gold',      value: 500,     tint: '#fbbf24', metalBoost: 0.95, roughOverride: 0.12, radius2D: 17, scale3D: 1.10 },
-  { tier: 'silver',    name: 'Silver',    value: 100,     tint: '#cbd5e1', metalBoost: 0.85, roughOverride: 0.20, radius2D: 14, scale3D: 0.95 },
-  { tier: 'base',      name: 'Base',      value: 1,       tint: '#94a3b8', metalBoost: 0.00, roughOverride: null, radius2D: 12, scale3D: 0.85 },
+  { tier: 'colossal', name: 'Colossal', value: 1000000, tint: '#ef4444', metalBoost: 1.0, roughOverride: 0.02, radius2D: 34, scale3D: 2.20 },
+  { tier: 'legendary', name: 'Legendary', value: 100000, tint: '#f59e0b', metalBoost: 1.0, roughOverride: 0.04, radius2D: 28, scale3D: 1.70 },
+  { tier: 'mythic', name: 'Mythic', value: 25000, tint: '#a855f7', metalBoost: 1.0, roughOverride: 0.06, radius2D: 24, scale3D: 1.45 },
+  { tier: 'platinum', name: 'Platinum', value: 5000, tint: '#06b6d4', metalBoost: 1.0, roughOverride: 0.08, radius2D: 20, scale3D: 1.25 },
+  { tier: 'gold', name: 'Gold', value: 500, tint: '#fbbf24', metalBoost: 0.95, roughOverride: 0.12, radius2D: 17, scale3D: 1.10 },
+  { tier: 'silver', name: 'Silver', value: 100, tint: '#cbd5e1', metalBoost: 0.85, roughOverride: 0.20, radius2D: 14, scale3D: 0.95 },
+  { tier: 'base', name: 'Base', value: 1, tint: '#94a3b8', metalBoost: 0.00, roughOverride: null, radius2D: 12, scale3D: 0.85 },
 ];
 
 export const storageService = {
@@ -540,7 +618,15 @@ export const storageService = {
     try {
       const data = localStorage.getItem(BUCKET_CONFIG_KEY);
       if (data) {
-        return { ...DEFAULT_BUCKET_CONFIG, ...JSON.parse(data) };
+        const parsed = JSON.parse(data);
+        return {
+          ...DEFAULT_BUCKET_CONFIG,
+          ...parsed,
+          backgroundVisible: parsed.backgroundVisible !== undefined
+            ? parsed.backgroundVisible
+            : (parsed.hideWalls !== undefined ? !parsed.hideWalls : false),
+          enableTokens: parsed.enableTokens !== undefined ? parsed.enableTokens : true,
+        };
       }
       return DEFAULT_BUCKET_CONFIG;
     } catch {
@@ -738,7 +824,7 @@ export const storageService = {
   // --- Custom Icons & Web Links Library ---
   getCustomIcons(): CustomIconItem[] {
     try {
-      const data = localStorage.getItem('anytoken_custom_icons');
+      const data = localStorage.getItem('TokenPile_custom_icons');
       if (data) {
         return JSON.parse(data);
       }
@@ -761,7 +847,7 @@ export const storageService = {
       const filtered = current.filter(i => !newIds.has(i.id) && !newSrcs.has(i.src));
       // Store up to 1000 icons so multi-folder collections are completely preserved
       const updated = [...icons, ...filtered].slice(0, 1000);
-      localStorage.setItem('anytoken_custom_icons', JSON.stringify(updated));
+      localStorage.setItem('TokenPile_custom_icons', JSON.stringify(updated));
     } catch (e) {
       console.warn('Failed to save custom icons to localStorage:', e);
     }
@@ -771,7 +857,7 @@ export const storageService = {
     try {
       const current = this.getCustomIcons();
       const updated = current.filter(i => i.id !== id);
-      localStorage.setItem('anytoken_custom_icons', JSON.stringify(updated));
+      localStorage.setItem('TokenPile_custom_icons', JSON.stringify(updated));
     } catch { }
   },
 
@@ -779,19 +865,19 @@ export const storageService = {
     try {
       const current = this.getCustomIcons();
       const updated = current.filter(i => (i.folder || 'Default Folder') !== folderName);
-      localStorage.setItem('anytoken_custom_icons', JSON.stringify(updated));
+      localStorage.setItem('TokenPile_custom_icons', JSON.stringify(updated));
     } catch { }
   },
 
   clearAllCustomIcons(): void {
     try {
-      localStorage.removeItem('anytoken_custom_icons');
+      localStorage.removeItem('TokenPile_custom_icons');
     } catch { }
   },
 
   getSavedWebLinks(): string[] {
     try {
-      const data = localStorage.getItem('anytoken_saved_web_links');
+      const data = localStorage.getItem('TokenPile_saved_web_links');
       if (data) {
         return JSON.parse(data);
       }
@@ -807,7 +893,7 @@ export const storageService = {
       const current = this.getSavedWebLinks();
       const filtered = current.filter(u => u !== url.trim());
       const updated = [url.trim(), ...filtered].slice(0, 50);
-      localStorage.setItem('anytoken_saved_web_links', JSON.stringify(updated));
+      localStorage.setItem('TokenPile_saved_web_links', JSON.stringify(updated));
     } catch { }
   },
 
@@ -815,7 +901,7 @@ export const storageService = {
     try {
       const current = this.getSavedWebLinks();
       const updated = current.filter(u => u !== url);
-      localStorage.setItem('anytoken_saved_web_links', JSON.stringify(updated));
+      localStorage.setItem('TokenPile_saved_web_links', JSON.stringify(updated));
     } catch { }
   },
 
@@ -865,21 +951,7 @@ export const storageService = {
   },
 
   getTwitchChatConfig(): TwitchChatConfig {
-    try {
-      const data = localStorage.getItem(TWITCH_CHAT_KEY);
-      if (data) {
-        return {
-          channel: '',
-          botPrefix: '!bet',
-          joinCommand: '!join',
-          leaveCommand: '!leave',
-          startingTokens: 50000,
-          autoConnect: true,
-          ...JSON.parse(data)
-        };
-      }
-    } catch { }
-    return {
+    let base: TwitchChatConfig = {
       channel: '',
       botPrefix: '!bet',
       joinCommand: '!join',
@@ -887,6 +959,26 @@ export const storageService = {
       startingTokens: 50000,
       autoConnect: true,
     };
+    try {
+      const data = localStorage.getItem(TWITCH_CHAT_KEY);
+      if (data) {
+        base = { ...base, ...JSON.parse(data) };
+      }
+    } catch { }
+
+    // If channel is provided in URL query parameters, auto-bind and auto-connect
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const urlChannel = params.get('channel') || params.get('ch') || params.get('room');
+        if (urlChannel) {
+          base.channel = urlChannel.trim().replace(/^https?:\/\/(www\.)?twitch\.tv\//i, '').replace(/^[#@]/, '').toLowerCase();
+          base.autoConnect = true;
+        }
+      } catch { }
+    }
+
+    return base;
   },
 
   saveTwitchChatConfig(config: Partial<TwitchChatConfig>): TwitchChatConfig {
@@ -894,6 +986,7 @@ export const storageService = {
       const current = this.getTwitchChatConfig();
       const updated = { ...current, ...config };
       localStorage.setItem(TWITCH_CHAT_KEY, JSON.stringify(updated));
+      broadcastStreamSync('TWITCH_CONFIG_UPDATED', updated);
       return updated;
     } catch {
       return this.getTwitchChatConfig();
@@ -906,7 +999,7 @@ export const storageService = {
       if (data && data.trim()) {
         return data.trim().toLowerCase();
       }
-    } catch {}
+    } catch { }
     return 'default';
   },
 
@@ -915,21 +1008,21 @@ export const storageService = {
       const clean = (style || 'default').trim().toLowerCase();
       localStorage.setItem(ACTIVE_STYLE_KEY, clean);
       broadcastStreamSync('ACTIVE_STYLE_UPDATED', { style: clean });
-    } catch {}
+    } catch { }
   },
 
   getAdminPasscode(): string {
     try {
       const saved = localStorage.getItem(ADMIN_PASSCODE_KEY);
       if (saved && saved.trim()) return saved.trim();
-    } catch {}
+    } catch { }
     return DEFAULT_ADMIN_PASSCODE;
   },
 
   saveAdminPasscode(passcode: string): void {
     try {
       localStorage.setItem(ADMIN_PASSCODE_KEY, passcode.trim());
-    } catch {}
+    } catch { }
   },
 
   isAdminUnlocked(): boolean {
@@ -958,7 +1051,7 @@ export const storageService = {
   setAdminUnlocked(unlocked: boolean): void {
     try {
       localStorage.setItem(ADMIN_UNLOCKED_KEY, unlocked ? 'true' : 'false');
-    } catch {}
+    } catch { }
   },
 
   isLocalOrObsEnvironment(): boolean {

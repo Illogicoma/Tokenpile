@@ -1,13 +1,13 @@
-# Privacy Policy for AnyToken Twitch Extension
+# Privacy Policy for TokenPile Twitch Extension
 
 *Last Updated: October 2026*
 
-This Privacy Policy explains how **AnyToken** ("we", "the Extension", or "the Service") handles information when you use our Twitch Extension on Twitch.tv or via the Twitch Mobile App.
+This Privacy Policy explains how **TokenPile** ("we", "the Extension", or "the Service") handles information when you use our Twitch Extension on Twitch.tv or via the Twitch Mobile App.
 
 ---
 
 ## 1. Zero Cloud Data Collection & Local-First Philosophy
-AnyToken is engineered with a **local-first, privacy-centric architecture**:
+TokenPile is engineered with a **local-first, privacy-centric architecture**:
 - **No Remote Database**: We do not maintain any central cloud database (such as Firebase, AWS, or Supabase).
 - **No Third-Party Analytics**: We do not include Google Analytics, Facebook Pixel, advertising trackers, or tracking cookies.
 - **No Sale of Personal Data**: We never sell, rent, monetize, or share your data with advertisers or third parties.
@@ -15,7 +15,7 @@ AnyToken is engineered with a **local-first, privacy-centric architecture**:
 ---
 
 ## 2. Information We Process
-When you interact with the AnyToken Extension on Twitch:
+When you interact with the TokenPile Extension on Twitch:
 
 ### A. Twitch Identity Information (Optional)
 - **Opaque User ID**: When you view the Extension, Twitch provides an anonymous, opaque identifier (`U...`) to distinguish unique participants.
@@ -38,9 +38,9 @@ When you interact with the AnyToken Extension on Twitch:
 ---
 
 ## 4. Virtual Points & Non-Gambling Disclaimer
-- **100% Virtual Entertainment**: AnyToken is a fun, simulated contest engine.
+- **100% Virtual Entertainment**: TokenPile is a fun, simulated contest engine.
 - **Zero Real-World Value**: All tokens, coins, and points are strictly virtual. They have no monetary value, cannot be redeemed for cash, and cannot be purchased with real money, Twitch Bits, or Channel Points.
-- **TOS Compliance**: AnyToken strictly adheres to Twitch's Terms of Service and Developer Services Agreement regarding simulated gaming and gambling.
+- **TOS Compliance**: TokenPile strictly adheres to Twitch's Terms of Service and Developer Services Agreement regarding simulated gaming and gambling.
 
 ---
 
@@ -58,4 +58,4 @@ Under GDPR, CCPA, and applicable global privacy regulations:
 ---
 
 ## 7. Contact
-For questions, support, or privacy inquiries regarding AnyToken, please open an issue in the official GitHub repository or contact the broadcaster on their Twitch channel.
+For questions, support, or privacy inquiries regarding TokenPile, please open an issue in the official GitHub repository or contact the broadcaster on their Twitch channel.

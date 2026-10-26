@@ -8,7 +8,8 @@ import {
   Zap,
   Target,
   Layers,
-  RefreshCw
+  RefreshCw,
+  Coins
 } from 'lucide-react';
 import type { BucketConfig } from '../types/betting';
 import { DEFAULT_BUCKET_CONFIG } from '../services/storageService';
@@ -181,13 +182,28 @@ export const BucketCalibrationDrawer = ({
           <span>Snap Track Stage</span>
         </button>
 
-        {/* Hide Walls Toggle */}
+        {/* Background Visible Toggle */}
         <button
-          className={`cyber-toggle-btn ${config.hideWalls ? 'active' : ''}`}
-          onClick={() => handleUpdate('hideWalls', !config.hideWalls)}
+          className={`cyber-toggle-btn ${(config.backgroundVisible !== undefined ? config.backgroundVisible : !config.hideWalls) ? 'active' : ''}`}
+          onClick={() => {
+            const current = config.backgroundVisible !== undefined ? config.backgroundVisible : !config.hideWalls;
+            handleUpdate('backgroundVisible', !current);
+            handleUpdate('hideWalls', current);
+          }}
+          title={(config.backgroundVisible !== undefined ? config.backgroundVisible : !config.hideWalls) ? "Hopper panel background is visible using theme styling" : "Hopper panel background is hidden"}
         >
-          {config.hideWalls ? <EyeOff size={14} color="#38bdf8" /> : <Eye size={14} />}
-          <span>{config.hideWalls ? 'Walls: Hidden (OBS Ready)' : 'Walls: Visible Glass'}</span>
+          {(config.backgroundVisible !== undefined ? config.backgroundVisible : !config.hideWalls) ? <Eye size={14} color="#38bdf8" /> : <EyeOff size={14} />}
+          <span>{(config.backgroundVisible !== undefined ? config.backgroundVisible : !config.hideWalls) ? 'Background: Visible' : 'Background: Hidden'}</span>
+        </button>
+
+        {/* Tokens Enabled Toggle */}
+        <button
+          className={`cyber-toggle-btn ${config.enableTokens !== false ? 'active-amber' : ''}`}
+          onClick={() => handleUpdate('enableTokens', config.enableTokens === false)}
+          title={config.enableTokens !== false ? "Tokens are enabled in the hopper" : "Tokens are disabled entirely"}
+        >
+          <Coins size={14} color={config.enableTokens !== false ? '#fbbf24' : '#94a3b8'} />
+          <span>{config.enableTokens !== false ? 'Tokens: Enabled' : 'Tokens: Disabled'}</span>
         </button>
 
         {/* Show Guides Toggle */}

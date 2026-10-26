@@ -88,7 +88,7 @@ export const EntrantsSidebar = ({
 
   const [expectedWinners, setExpectedWinners] = useState<number>(() => {
     try {
-      const stored = localStorage.getItem('anytoken_expected_winners');
+      const stored = localStorage.getItem('TokenPile_expected_winners');
       if (stored) {
         const parsed = parseInt(stored, 10);
         if (parsed >= 1 && parsed <= 12) return parsed;
@@ -133,7 +133,7 @@ export const EntrantsSidebar = ({
   const handleSetExpectedWinners = (count: number) => {
     setExpectedWinners(count);
     try {
-      localStorage.setItem('anytoken_expected_winners', String(count));
+      localStorage.setItem('TokenPile_expected_winners', String(count));
     } catch { }
     setStagedPodiumIds(prev => prev.slice(0, count));
   };
@@ -151,7 +151,7 @@ export const EntrantsSidebar = ({
 
   const [isCompact, setIsCompact] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('anytoken_entrants_compact') === 'true';
+      return localStorage.getItem('TokenPile_entrants_compact') === 'true';
     } catch {
       return false;
     }
@@ -159,7 +159,7 @@ export const EntrantsSidebar = ({
 
   const [showNameIcons, setShowNameIcons] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('anytoken_show_name_icons') === 'true';
+      return localStorage.getItem('TokenPile_show_name_icons') === 'true';
     } catch {
       return false;
     }
@@ -167,7 +167,7 @@ export const EntrantsSidebar = ({
 
   const [isAutoScroll, setIsAutoScroll] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('anytoken_entrants_auto_scroll') === 'true';
+      return localStorage.getItem('TokenPile_entrants_auto_scroll') === 'true';
     } catch {
       return false;
     }
@@ -185,7 +185,7 @@ export const EntrantsSidebar = ({
     const next = !isAutoScroll;
     setIsAutoScroll(next);
     try {
-      localStorage.setItem('anytoken_entrants_auto_scroll', String(next));
+      localStorage.setItem('TokenPile_entrants_auto_scroll', String(next));
     } catch { }
   };
 
@@ -199,7 +199,7 @@ export const EntrantsSidebar = ({
       onToggleCompactMode(next);
     }
     try {
-      localStorage.setItem('anytoken_entrants_compact', String(next));
+      localStorage.setItem('TokenPile_entrants_compact', String(next));
     } catch { }
   };
 
@@ -210,7 +210,7 @@ export const EntrantsSidebar = ({
       onToggleShowNameIcons(next);
     }
     try {
-      localStorage.setItem('anytoken_show_name_icons', String(next));
+      localStorage.setItem('TokenPile_show_name_icons', String(next));
     } catch { }
   };
 
@@ -524,7 +524,6 @@ export const EntrantsSidebar = ({
           title={isAutoScroll ? "Pause entrant auto-scrolling" : "Enable continuous auto-scrolling across all entrants"}
         >
           <Repeat size={11} className={isAutoScroll ? 'spin-slow' : ''} />
-          <span>Auto</span>
         </button>
       </div>
 
@@ -710,9 +709,9 @@ export const EntrantsSidebar = ({
                         {effectiveOddsMode === 'manual'
                           ? `${(outcome.manualOdds ?? outcome.odds ?? 2.0).toFixed(1)}x`
                           : (outcome.totalBet > 0
-                              ? `${outcome.percentage.toFixed(0)}%`
-                              : (outcome.manualOdds ? `${outcome.manualOdds.toFixed(1)}x` : '0%')
-                            )
+                            ? `${outcome.percentage.toFixed(0)}%`
+                            : (outcome.manualOdds ? `${outcome.manualOdds.toFixed(1)}x` : '0%')
+                          )
                         }
                       </span>
                     </div>
@@ -818,18 +817,18 @@ export const EntrantsSidebar = ({
                             effectiveOddsMode === 'manual'
                               ? `Fixed Odds: ${(outcome.manualOdds ?? outcome.odds ?? 2.0).toFixed(2)}x`
                               : (outcome.totalBet > 0
-                                  ? `${outcome.odds.toFixed(2)}x odds multiplier`
-                                  : (outcome.manualOdds ? `Starting Odds: ${outcome.manualOdds.toFixed(2)}x` : 'No bets yet')
-                                )
+                                ? `${outcome.odds.toFixed(2)}x odds multiplier`
+                                : (outcome.manualOdds ? `Starting Odds: ${outcome.manualOdds.toFixed(2)}x` : 'No bets yet')
+                              )
                           }
                         >
                           <span className="odds_value">
                             {effectiveOddsMode === 'manual'
                               ? `${(outcome.manualOdds ?? outcome.odds ?? 2.0).toFixed(1)}x`
                               : (outcome.totalBet > 0
-                                  ? `${outcome.odds.toFixed(2)}x`
-                                  : (outcome.manualOdds ? `${outcome.manualOdds.toFixed(1)}x` : '--')
-                                )
+                                ? `${outcome.odds.toFixed(2)}x`
+                                : (outcome.manualOdds ? `${outcome.manualOdds.toFixed(1)}x` : '--')
+                              )
                             }
                           </span>
                         </div>

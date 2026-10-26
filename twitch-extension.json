@@ -1,6 +1,6 @@
 {
   "$schema": "https://dev.twitch.tv/docs/extensions/schema.json",
-  "name": "AnyToken",
+  "name": "TokenPile",
   "version": "1.0.0",
   "author": "Tokenpile",
   "description": "Interactive 3D stream racing, viewer token customizer, and live bet slip with Twitch Extension PubSub.",

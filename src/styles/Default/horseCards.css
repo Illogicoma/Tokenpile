@@ -1,5 +1,5 @@
 /* =====================================================================
-   AnyToken - Custom Horse Card Skin Theme
+   TokenPile - Custom Horse Card Skin Theme
    =====================================================================
    Custom Skin Architecture:
    Anyone who forks this project can customize the appearance of horse cards
@@ -75,10 +75,12 @@
     opacity: 0;
     transform: translateY(-26px) scale(0.96);
   }
+
   60% {
     opacity: 0.95;
     transform: translateY(2px) scale(1.01);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -235,16 +237,14 @@
   left: -160%;
   width: 220%;
   height: 220%;
-  background: linear-gradient(
-    115deg,
-    transparent 0%,
-    transparent 35%,
-    rgba(255, 255, 255, 0.35) 45%,
-    rgba(255, 255, 255, 0.85) 50%,
-    rgba(255, 255, 255, 0.35) 55%,
-    transparent 65%,
-    transparent 100%
-  );
+  background: linear-gradient(115deg,
+      transparent 0%,
+      transparent 35%,
+      rgba(255, 255, 255, 0.35) 45%,
+      rgba(255, 255, 255, 0.85) 50%,
+      rgba(255, 255, 255, 0.35) 55%,
+      transparent 65%,
+      transparent 100%);
   transform: rotate(25deg);
   pointer-events: none;
   animation: metallicShimmer 3.2s ease-in-out infinite;
@@ -257,10 +257,13 @@
     transform: translateX(-100%) rotate(25deg);
     opacity: 0;
   }
+
   15% {
     opacity: 0.9;
   }
-  40%, 100% {
+
+  40%,
+  100% {
     transform: translateX(130%) rotate(25deg);
     opacity: 0;
   }
@@ -794,27 +797,34 @@ img.name_icon_emoji,
     gap: 6px;
     padding: 0 6px 0 0;
   }
+
   .card .card_number {
     font-size: 21px;
   }
+
   .card .entrant_icon_box {
     width: 42px;
     height: 42px;
   }
+
   .card .entrant_icon_emoji {
     font-size: 24px;
   }
+
   .card .name_text_container {
     height: 24px;
     padding: 0 8px;
   }
+
   .card .card_name {
     font-size: 14.5px;
   }
+
   .card .stats_row {
     height: 20px;
     gap: 4px;
   }
+
   .card .points_number_container,
   .card .pool_number_container,
   .card .bets_number_container,
@@ -822,14 +832,17 @@ img.name_icon_emoji,
     font-size: 11px;
     padding: 0 5px;
   }
+
   .card .crown_icon_container {
     width: 34px;
     height: 46px;
   }
+
   .card .card_action_column {
     width: 22px;
     height: 46px;
   }
+
   .card .lock_icon_container,
   .card .delete_icon_container {
     width: 22px;
@@ -841,9 +854,11 @@ img.name_icon_emoji,
   .card.is-compact .pool_number_container {
     height: 30px;
   }
+
   .card.is-compact .card_name {
     font-size: 13.5px;
   }
+
   .card.is-compact .crown_icon_container,
   .card.is-compact .lock_icon_container,
   .card.is-compact .delete_icon_container {
@@ -860,27 +875,34 @@ img.name_icon_emoji,
     gap: 8px;
     padding: 0 8px 0 0;
   }
+
   .card .card_number {
     font-size: 24px;
   }
+
   .card .entrant_icon_box {
     width: 46px;
     height: 46px;
   }
+
   .card .entrant_icon_emoji {
     font-size: 27px;
   }
+
   .card .name_text_container {
     height: 27px;
     padding: 0 10px;
   }
+
   .card .card_name {
     font-size: 16px;
   }
+
   .card .stats_row {
     height: 22px;
     gap: 5px;
   }
+
   .card .points_number_container,
   .card .pool_number_container,
   .card .bets_number_container,
@@ -888,14 +910,17 @@ img.name_icon_emoji,
     font-size: 12px;
     padding: 0 7px;
   }
+
   .card .crown_icon_container {
     width: 38px;
     height: 52px;
   }
+
   .card .card_action_column {
     width: 24px;
     height: 52px;
   }
+
   .card .lock_icon_container,
   .card .delete_icon_container {
     width: 24px;
@@ -907,18 +932,22 @@ img.name_icon_emoji,
   .card.is-compact .pool_number_container {
     height: 34px;
   }
+
   .card.is-compact .card_name {
     font-size: 14.5px;
   }
+
   .card.is-compact .crown_icon_container,
   .card.is-compact .lock_icon_container,
   .card.is-compact .delete_icon_container {
     height: 34px;
     width: 28px;
   }
+
   .card .podium-edge-wedge {
     width: 26px;
   }
+
   .card .podium-edge-number {
     font-size: 13.5px;
   }
@@ -933,27 +962,34 @@ img.name_icon_emoji,
     gap: 3px;
     padding: 0 3px 0 0;
   }
+
   .card .card_number {
     font-size: 16px;
   }
+
   .card .entrant_icon_box {
     width: 32px;
     height: 32px;
   }
+
   .card .entrant_icon_emoji {
     font-size: 18px;
   }
+
   .card .name_text_container {
     height: 19px;
     padding: 0 4px;
   }
+
   .card .card_name {
     font-size: 11.5px;
   }
+
   .card .stats_row {
     height: 16px;
     gap: 2px;
   }
+
   .card .points_number_container,
   .card .pool_number_container,
   .card .bets_number_container,
@@ -961,22 +997,27 @@ img.name_icon_emoji,
     font-size: 9.5px;
     padding: 0 3px;
   }
+
   .card .crown_icon_container {
     width: 26px;
     height: 38px;
   }
+
   .card .card_action_column {
     width: 17px;
     height: 38px;
   }
+
   .card .lock_icon_container,
   .card .delete_icon_container {
     width: 17px;
     height: 17.5px;
   }
+
   .card .podium-edge-wedge {
     width: 17px;
   }
+
   .card .podium-edge-number {
     font-size: 9.5px;
   }
@@ -1212,6 +1253,7 @@ img.name_icon_emoji,
     opacity: 0;
     transform: translateY(-6px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1300,9 +1342,12 @@ img.name_icon_emoji,
 }
 
 @keyframes pulseCommit {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 12px rgba(245, 158, 11, 0.6), 0 2px 4px rgba(0, 0, 0, 0.2);
   }
+
   50% {
     box-shadow: 0 0 20px rgba(245, 158, 11, 0.9), 0 2px 6px rgba(0, 0, 0, 0.3);
     transform: scale(1.02);
@@ -1932,6 +1977,3 @@ img.name_icon_emoji,
   margin: 0;
   line-height: 1.35;
 }
-
-
-

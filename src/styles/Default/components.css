@@ -1,5 +1,5 @@
 /* =========================================================================
-   AnyToken / Tokenpile - UI Components Skin (Buttons, Inputs, Modals, Badges)
+   TokenPile / Tokenpile - UI Components Skin (Buttons, Inputs, Modals, Badges)
    Modular skin component for src/styles/Default/
    ========================================================================= */
 
@@ -18,6 +18,15 @@
 
 .cosmos-panel:hover {
   border-color: var(--card-border-hover);
+}
+
+/* Hopper Custom-Positioned Themed Backdrop Panel */
+.hopper-backdrop-panel {
+  padding: 0 !important;
+  box-sizing: border-box;
+  pointer-events: none;
+  overflow: hidden;
+  transition: opacity 0.2s ease, border-color 0.2s ease;
 }
 
 /* Modals Scaffolding */
@@ -530,15 +539,14 @@
 }
 
 .cyber-range.rainbow-track {
-  background: linear-gradient(to right, 
-    hsl(0, 70%, 50%),
-    hsl(60, 70%, 50%),
-    hsl(120, 70%, 50%),
-    hsl(180, 70%, 50%),
-    hsl(240, 70%, 50%),
-    hsl(300, 70%, 50%),
-    hsl(360, 70%, 50%)
-  ) !important;
+  background: linear-gradient(to right,
+      hsl(0, 70%, 50%),
+      hsl(60, 70%, 50%),
+      hsl(120, 70%, 50%),
+      hsl(180, 70%, 50%),
+      hsl(240, 70%, 50%),
+      hsl(300, 70%, 50%),
+      hsl(360, 70%, 50%)) !important;
 }
 
 .theme-accents-grid {
@@ -664,6 +672,7 @@
     opacity: 0;
     transform: scale(0.96) translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -735,6 +744,7 @@
   .token-maker-body {
     grid-template-columns: 1fr;
   }
+
   .preview-column {
     position: static;
   }
@@ -1653,6 +1663,7 @@ input:checked+.slider:before {
     opacity: 0;
     transform: translateX(-20px) scale(0.95);
   }
+
   100% {
     opacity: 1;
     transform: translateX(0) scale(1);
@@ -1666,6 +1677,7 @@ input:checked+.slider:before {
     max-height: 70px;
     margin-bottom: 0;
   }
+
   100% {
     opacity: 0;
     transform: translateY(-12px) scale(0.92);
@@ -2004,22 +2016,27 @@ input:checked+.slider:before {
     border-color: #ff007f !important;
     box-shadow: 0 0 5px rgba(255, 0, 127, 0.4), inset 0 0 6px rgba(255, 255, 255, 0.55);
   }
+
   20% {
     border-color: #ff9100 !important;
     box-shadow: 0 0 5px rgba(255, 145, 0, 0.4), inset 0 0 6px rgba(255, 255, 255, 0.55);
   }
+
   40% {
     border-color: #ffd600 !important;
     box-shadow: 0 0 5px rgba(255, 214, 0, 0.45), inset 0 0 6px rgba(255, 255, 255, 0.55);
   }
+
   60% {
     border-color: #00e676 !important;
     box-shadow: 0 0 5px rgba(0, 230, 118, 0.45), inset 0 0 6px rgba(255, 255, 255, 0.55);
   }
+
   80% {
     border-color: #00b0ff !important;
     box-shadow: 0 0 5px rgba(0, 176, 255, 0.45), inset 0 0 6px rgba(255, 255, 255, 0.55);
   }
+
   100% {
     border-color: #ff007f !important;
     box-shadow: 0 0 5px rgba(255, 0, 127, 0.4), inset 0 0 6px rgba(255, 255, 255, 0.55);
@@ -2031,12 +2048,15 @@ input:checked+.slider:before {
     background-position: 130% 130%;
     opacity: 0;
   }
+
   15% {
     opacity: 0.95;
   }
+
   85% {
     opacity: 0.95;
   }
+
   100% {
     background-position: -30% -30%;
     opacity: 0;
@@ -2044,9 +2064,12 @@ input:checked+.slider:before {
 }
 
 @keyframes rainbowPrismGlitter {
-  0%, 100% {
+
+  0%,
+  100% {
     filter: hue-rotate(0deg) brightness(1.04);
   }
+
   50% {
     filter: hue-rotate(180deg) brightness(1.15);
   }
@@ -2077,17 +2100,15 @@ input:checked+.slider:before {
   pointer-events: none;
   z-index: 15;
   border-radius: inherit;
-  background: linear-gradient(
-    115deg,
-    transparent 15%,
-    rgba(255, 0, 128, 0.22) 28%,
-    rgba(255, 170, 0, 0.32) 38%,
-    rgba(255, 255, 255, 0.8) 48%,
-    rgba(0, 230, 255, 0.35) 58%,
-    rgba(68, 138, 255, 0.28) 68%,
-    rgba(213, 0, 249, 0.22) 78%,
-    transparent 90%
-  );
+  background: linear-gradient(115deg,
+      transparent 15%,
+      rgba(255, 0, 128, 0.22) 28%,
+      rgba(255, 170, 0, 0.32) 38%,
+      rgba(255, 255, 255, 0.8) 48%,
+      rgba(0, 230, 255, 0.35) 58%,
+      rgba(68, 138, 255, 0.28) 68%,
+      rgba(213, 0, 249, 0.22) 78%,
+      transparent 90%);
   background-size: 250% 250%;
   animation: rainbowFoilSweep 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   mix-blend-mode: overlay;
@@ -2101,12 +2122,10 @@ input:checked+.slider:before {
   pointer-events: none;
   z-index: 3;
   border-radius: inherit;
-  background: radial-gradient(
-    circle at 50% 50%,
-    rgba(255, 215, 0, 0.1) 0%,
-    rgba(0, 229, 255, 0.06) 50%,
-    transparent 100%
-  );
+  background: radial-gradient(circle at 50% 50%,
+      rgba(255, 215, 0, 0.1) 0%,
+      rgba(0, 229, 255, 0.06) 50%,
+      transparent 100%);
   animation: rainbowPrismGlitter 3.2s ease-in-out infinite;
 }
 
@@ -2115,10 +2134,13 @@ input:checked+.slider:before {
    ========================================================================= */
 
 @keyframes capsuleLerpGlow {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 6px rgba(245, 158, 11, 0.4), inset 0 0 4px rgba(255, 255, 255, 0.6);
     transform: scale(1);
   }
+
   50% {
     box-shadow: 0 0 14px rgba(251, 191, 36, 0.85), inset 0 0 8px rgba(255, 255, 255, 0.9);
     transform: scale(1.06);
@@ -2130,14 +2152,17 @@ input:checked+.slider:before {
     transform: scale(1);
     filter: brightness(1);
   }
+
   20% {
     transform: scale(1.22);
     filter: brightness(1.7) drop-shadow(0 0 14px #fbbf24);
   }
+
   50% {
     transform: scale(1.1);
     filter: brightness(1.4) drop-shadow(0 0 10px #f59e0b);
   }
+
   100% {
     transform: scale(1);
     filter: brightness(1);
@@ -2149,12 +2174,15 @@ input:checked+.slider:before {
     left: -120%;
     opacity: 0;
   }
+
   20% {
     opacity: 1;
   }
+
   80% {
     opacity: 1;
   }
+
   100% {
     left: 200%;
     opacity: 0;
@@ -2181,12 +2209,10 @@ input:checked+.slider:before {
   left: -120%;
   width: 70%;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.95) 50%,
-    transparent 100%
-  );
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.95) 50%,
+      transparent 100%);
   transform: skewX(-25deg);
   animation: shineStreakSweep 0.65s ease-out forwards;
   pointer-events: none;
@@ -2209,10 +2235,12 @@ input:checked+.slider:before {
     transform: scale(0) rotate(0deg);
     opacity: 0;
   }
+
   40% {
     transform: scale(1.5) rotate(90deg);
     opacity: 1;
   }
+
   100% {
     transform: scale(1.1) rotate(180deg);
     opacity: 0;

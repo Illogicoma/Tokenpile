@@ -1,6 +1,6 @@
-# AnyToken Skin Theme Package: Default
+# TokenPile Skin Theme Package: Default
 
-This folder defines the baseline design system, stylesheets, graphical assets, and sound effects for AnyToken.
+This folder defines the baseline design system, stylesheets, graphical assets, and sound effects for TokenPile.
 
 ### Folder Structure:
 - `fonts.css`: Typography definitions, `@font-face` loaders, and font family variables (`--font-family-display`, `--font-family-body`)
@@ -26,4 +26,4 @@ This folder defines the baseline design system, stylesheets, graphical assets, a
 2. Edit or delete whatever you want!
    - You only need to include the files you wish to change.
    - Any missing `.css` rule, image, or sound file will **automatically cascade and fall back to `Default`**.
-3. Open AnyToken Settings -> **Skin Theme Package** -> Select your new theme!
+3. Open TokenPile Settings -> **Skin Theme Package** -> Select your new theme!

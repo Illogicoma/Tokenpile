@@ -1,10 +1,10 @@
 @echo off
-title AnyToken - Stream Betting Engine
+title TokenPile - Stream Betting Engine
 color 0b
 cd /d "%~dp0"
 
 echo ======================================================
-echo           AnyToken - Stream Betting Engine           
+echo           TokenPile - Stream Betting Engine           
 echo ======================================================
 echo.
 
@@ -13,7 +13,7 @@ where node >nul 2>nul
 if %errorlevel% neq 0 (
     color 0c
     echo [ERROR] Node.js is not installed or not in your PATH!
-    echo Please install Node.js from https://nodejs.org/ to run AnyToken.
+    echo Please install Node.js from https://nodejs.org/ to run TokenPile.
     echo.
     pause
     exit /b 1

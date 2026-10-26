@@ -1,5 +1,5 @@
 /* =========================================================================
-   AnyToken / Tokenpile - Viewer Cards & Roster Skin
+   TokenPile / Tokenpile - Viewer Cards & Roster Skin
    Modular skin component for src/styles/Default/
    ========================================================================= */
 
@@ -259,6 +259,7 @@
   0% {
     box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
   }
+
   100% {
     box-shadow: 0 0 14px rgba(239, 68, 68, 0.85);
   }
@@ -595,10 +596,13 @@
 }
 
 @keyframes spotlightPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(-1px);
     box-shadow: 0 0 16px rgba(245, 158, 11, 0.7), 0 2px 6px rgba(0, 0, 0, 0.2);
   }
+
   40% {
     transform: translateY(-2px) scale(1.02);
     box-shadow: 0 0 24px rgba(245, 158, 11, 0.95), 0 4px 10px rgba(0, 0, 0, 0.3);
@@ -1212,6 +1216,7 @@
   from {
     transform: translateX(-100%);
   }
+
   to {
     transform: translateX(0);
   }
@@ -1297,6 +1302,7 @@
   from {
     transform: translateY(0);
   }
+
   to {
     transform: translateY(-2px);
   }
@@ -1367,6 +1373,7 @@
     opacity: 0;
     transform: translateY(-8px) scale(0.98);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -1501,15 +1508,18 @@
     align-items: stretch;
     gap: 0.35rem;
   }
+
   .viewer-podium-title {
     width: 100%;
     justify-content: flex-start;
   }
+
   .viewer-podium-controls {
     width: 100%;
     justify-content: space-between;
     margin-left: 0;
   }
+
   .viewer-podium-tab-btn {
     padding: 2px 5px;
     font-size: 0.65rem;
@@ -1551,6 +1561,7 @@
 .viewer-podium-cards-strip::-webkit-scrollbar {
   width: 4px;
 }
+
 .viewer-podium-cards-strip::-webkit-scrollbar-thumb {
   background: rgba(125, 107, 66, 0.35);
   border-radius: 4px;
@@ -1698,10 +1709,12 @@
     box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
     border-color: #f59e0b;
   }
+
   70% {
     box-shadow: 0 0 0 6px rgba(245, 158, 11, 0);
     border-color: #d97706;
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
     border-color: #f59e0b;
@@ -1713,5 +1726,3 @@
   color: var(--accent-gold-dark, #b45309) !important;
   background: rgba(245, 158, 11, 0.12) !important;
 }
-
-

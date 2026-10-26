@@ -9,7 +9,9 @@ import {
   Grid,
   Columns,
   Gift,
-  Building2
+  Building2,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import type { Contest, HouseConfig } from '../types/betting';
 import { IconDisplay } from './IconDisplay';
@@ -47,7 +49,7 @@ export const ContestOddsBar: React.FC<ContestOddsBarProps> = ({
   // Persistent layout and size states
   const [isWrapped, setIsWrapped] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('anytoken_odds_bar_wrapped') === 'true';
+      return localStorage.getItem('TokenPile_odds_bar_wrapped') === 'true';
     } catch {
       return false;
     }
@@ -55,7 +57,7 @@ export const ContestOddsBar: React.FC<ContestOddsBarProps> = ({
 
   const [customHeight, setCustomHeight] = useState<number | null>(() => {
     try {
-      const saved = localStorage.getItem('anytoken_odds_bar_height');
+      const saved = localStorage.getItem('TokenPile_odds_bar_height');
       return saved ? parseInt(saved, 10) : null;
     } catch {
       return null;
@@ -64,7 +66,7 @@ export const ContestOddsBar: React.FC<ContestOddsBarProps> = ({
 
   const [isAutoScroll, setIsAutoScroll] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('anytoken_odds_auto_scroll') === 'true';
+      return localStorage.getItem('TokenPile_odds_auto_scroll') === 'true';
     } catch {
       return false;
     }
@@ -191,15 +193,15 @@ export const ContestOddsBar: React.FC<ContestOddsBarProps> = ({
         setIsWrapped(true);
         setCustomHeight(finalHeight);
         try {
-          localStorage.setItem('anytoken_odds_bar_height', String(finalHeight));
-          localStorage.setItem('anytoken_odds_bar_wrapped', 'true');
+          localStorage.setItem('TokenPile_odds_bar_height', String(finalHeight));
+          localStorage.setItem('TokenPile_odds_bar_wrapped', 'true');
         } catch { }
       } else {
         setIsWrapped(false);
         setCustomHeight(null);
         try {
-          localStorage.removeItem('anytoken_odds_bar_height');
-          localStorage.setItem('anytoken_odds_bar_wrapped', 'false');
+          localStorage.removeItem('TokenPile_odds_bar_height');
+          localStorage.setItem('TokenPile_odds_bar_wrapped', 'false');
         } catch { }
       }
     };
@@ -213,15 +215,15 @@ export const ContestOddsBar: React.FC<ContestOddsBarProps> = ({
       setIsWrapped(false);
       setCustomHeight(null);
       try {
-        localStorage.removeItem('anytoken_odds_bar_height');
-        localStorage.setItem('anytoken_odds_bar_wrapped', 'false');
+        localStorage.removeItem('TokenPile_odds_bar_height');
+        localStorage.setItem('TokenPile_odds_bar_wrapped', 'false');
       } catch { }
     } else {
       setIsWrapped(true);
       setCustomHeight(160);
       try {
-        localStorage.setItem('anytoken_odds_bar_height', '160');
-        localStorage.setItem('anytoken_odds_bar_wrapped', 'true');
+        localStorage.setItem('TokenPile_odds_bar_height', '160');
+        localStorage.setItem('TokenPile_odds_bar_wrapped', 'true');
       } catch { }
     }
   };
@@ -232,29 +234,47 @@ export const ContestOddsBar: React.FC<ContestOddsBarProps> = ({
     if (!next) {
       setCustomHeight(null);
       try {
-        localStorage.removeItem('anytoken_odds_bar_height');
-        localStorage.setItem('anytoken_odds_bar_wrapped', 'false');
+        localStorage.removeItem('TokenPile_odds_bar_height');
+        localStorage.setItem('TokenPile_odds_bar_wrapped', 'false');
       } catch { }
     } else {
       const targetH = customHeight || 160;
       setCustomHeight(targetH);
       try {
-        localStorage.setItem('anytoken_odds_bar_height', String(targetH));
-        localStorage.setItem('anytoken_odds_bar_wrapped', 'true');
+        localStorage.setItem('TokenPile_odds_bar_height', String(targetH));
+        localStorage.setItem('TokenPile_odds_bar_wrapped', 'true');
       } catch { }
     }
+  };
+
+  const [isCardsHidden, setIsCardsHidden] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('TokenPile_odds_hide_cards') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleToggleHideCards = () => {
+    setIsCardsHidden(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('TokenPile_odds_hide_cards', String(next));
+      } catch { }
+      return next;
+    });
   };
 
   const handleToggleAutoScroll = () => {
     const next = !isAutoScroll;
     setIsAutoScroll(next);
     try {
-      localStorage.setItem('anytoken_odds_auto_scroll', String(next));
+      localStorage.setItem('TokenPile_odds_auto_scroll', String(next));
     } catch { }
   };
 
   return (
-    <div className={`contest-odds-bar cosmos-panel ${shineActive ? 'has-shine-sweep' : ''}`}>
+    <div className={`contest-odds-bar cosmos-panel ${isCardsHidden ? 'is-cards-hidden' : ''} ${shineActive ? 'has-shine-sweep' : ''}`}>
       {/* Top Header / Meta Container */}
       <div className="odds-header-container">
         {/* Row 1: Expanded Race Title Bar + Search */}
@@ -318,7 +338,7 @@ export const ContestOddsBar: React.FC<ContestOddsBarProps> = ({
             </span>
 
             {/* 2. Total Pot Readout */}
-            <div 
+            <div
               className="odds-pot-capsule"
               onClick={() => {
                 setIsSeedPopoverOpen(prev => !prev);
@@ -557,26 +577,40 @@ export const ContestOddsBar: React.FC<ContestOddsBarProps> = ({
 
           <div className="odds-meta-right-group">
             {/* Auto-Scroll Toggle Button */}
+            {!isCardsHidden && (
+              <button
+                type="button"
+                className={`odds-toolbar-btn ${isAutoScroll ? 'is-active' : ''}`}
+                onClick={handleToggleAutoScroll}
+                title={isAutoScroll ? "Pause horse auto-scrolling" : "Enable continuous auto-scrolling across horses"}
+              >
+                <Repeat size={12} className={isAutoScroll ? 'spin-slow' : ''} />
+              </button>
+            )}
+
+            {/* Hide/Show Horse Cards Toggle Button */}
             <button
               type="button"
-              className={`odds-toolbar-btn ${isAutoScroll ? 'is-active' : ''}`}
-              onClick={handleToggleAutoScroll}
-              title={isAutoScroll ? "Pause horse auto-scrolling" : "Enable continuous auto-scrolling across horses"}
+              className={`odds-toolbar-btn ${isCardsHidden ? 'is-active' : ''}`}
+              onClick={handleToggleHideCards}
+              title={isCardsHidden ? "Show entrant cards in odds bar" : "Hide entrant cards (Super-compact odds ribbon)"}
             >
-              <Repeat size={12} className={isAutoScroll ? 'spin-slow' : ''} />
-              <span>Auto</span>
+              {isCardsHidden ? <EyeOff size={12} /> : <Eye size={12} />}
+              <span>{isCardsHidden ? 'Show Cards' : 'Hide Cards'}</span>
             </button>
 
             {/* Grid / Strip Toggle Button */}
-            <button
-              type="button"
-              className={`odds-toolbar-btn ${isWrapped ? 'is-active' : ''}`}
-              onClick={handleToggleWrap}
-              title={isWrapped ? "Switch to single horizontal strip" : "Wrap horses into a multi-row grid"}
-            >
-              {isWrapped ? <Columns size={12} /> : <Grid size={12} />}
-              <span>{isWrapped ? 'Grid' : 'Strip'}</span>
-            </button>
+            {!isCardsHidden && (
+              <button
+                type="button"
+                className={`odds-toolbar-btn ${isWrapped ? 'is-active' : ''}`}
+                onClick={handleToggleWrap}
+                title={isWrapped ? "Switch to single horizontal strip" : "Wrap horses into a multi-row grid"}
+              >
+                {isWrapped ? <Columns size={12} /> : <Grid size={12} />}
+                <span>{isWrapped ? 'Grid' : 'Strip'}</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -631,100 +665,104 @@ export const ContestOddsBar: React.FC<ContestOddsBarProps> = ({
       </div>
 
       {/* Runner Odds Chips Container - Strip Mode or Wrapped Grid Mode */}
-      <div
-        className="odds-runners-container"
-        style={{
-          maxHeight: isWrapped && customHeight ? `${customHeight}px` : undefined,
-        }}
-      >
-        <div
-          ref={runnersScrollRef}
-          className={isWrapped ? "odds-runners-grid-wrap" : "odds-runners-strip"}
-          style={{
-            maxHeight: isWrapped && customHeight ? `${customHeight}px` : undefined,
-          }}
-        >
-          {filteredOutcomes.map((o) => {
-            const isFav = favorite?.id === o.id;
-            const isLocked = o.isLocked;
+      {!isCardsHidden && (
+        <>
+          <div
+            className="odds-runners-container"
+            style={{
+              maxHeight: isWrapped && customHeight ? `${customHeight}px` : undefined,
+            }}
+          >
+            <div
+              ref={runnersScrollRef}
+              className={isWrapped ? "odds-runners-grid-wrap" : "odds-runners-strip"}
+              style={{
+                maxHeight: isWrapped && customHeight ? `${customHeight}px` : undefined,
+              }}
+            >
+              {filteredOutcomes.map((o) => {
+                const isFav = favorite?.id === o.id;
+                const isLocked = o.isLocked;
 
-            const podiumIdx = contest.podiumOutcomeIds
-              ? contest.podiumOutcomeIds.indexOf(o.id)
-              : (contest.winningOutcomeId === o.id ? 0 : -1);
-            const isPodiumWin = podiumIdx !== -1;
-            const podiumPlace = isPodiumWin ? (podiumIdx + 1) : null;
-            const podiumBadge = podiumPlace === 1 ? '🥇 1st' : podiumPlace === 2 ? '🥈 2nd' : podiumPlace === 3 ? '🥉 3rd' : null;
-            const podiumClass = podiumPlace === 1 ? 'chip-podium-1st' : podiumPlace === 2 ? 'chip-podium-2nd' : podiumPlace === 3 ? 'chip-podium-3rd' : '';
+                const podiumIdx = contest.podiumOutcomeIds
+                  ? contest.podiumOutcomeIds.indexOf(o.id)
+                  : (contest.winningOutcomeId === o.id ? 0 : -1);
+                const isPodiumWin = podiumIdx !== -1;
+                const podiumPlace = isPodiumWin ? (podiumIdx + 1) : null;
+                const podiumBadge = podiumPlace === 1 ? '🥇 1st' : podiumPlace === 2 ? '🥈 2nd' : podiumPlace === 3 ? '🥉 3rd' : null;
+                const podiumClass = podiumPlace === 1 ? 'chip-podium-1st' : podiumPlace === 2 ? 'chip-podium-2nd' : podiumPlace === 3 ? 'chip-podium-3rd' : '';
 
-            const runnerShare = runnerBetsTotal > 0 ? (o.totalBet / runnerBetsTotal) * 100 : 0;
-            const isHorseRainbow = Boolean(isPodiumWin && contest.status === 'resolved' && rainbowActive);
+                const runnerShare = runnerBetsTotal > 0 ? (o.totalBet / runnerBetsTotal) * 100 : 0;
+                const isHorseRainbow = Boolean(isPodiumWin && contest.status === 'resolved' && rainbowActive);
 
-            return (
-              <div
-                key={o.id}
-                className={`odds-runner-chip ${isFav ? 'chip-favorite' : ''} ${isLocked ? 'chip-locked' : ''} ${podiumClass} ${isHorseRainbow ? 'rainbow-card-shine' : ''} ${isWrapped ? 'is-grid-cell' : ''}`}
-                onClick={() => onSelectOutcome && onSelectOutcome(o.id)}
-                title={`#${o.number} ${o.name} - Odds: ${o.odds.toFixed(2)}x - Bets: ${runnerBetsTotal > 0 ? runnerShare.toFixed(1) : '0'}% (${o.totalBet.toLocaleString()} pts)${podiumBadge ? ` [${podiumBadge}]` : ''} • Click to place House Bet (+${houseConfig?.betAmount || 500} pts as ${houseConfig?.name || 'The House'})`}
-              >
-                {/* Entrant Info (Number, Icon, Full Name) */}
-                <div className="chip-entrant-info">
+                return (
                   <div
-                    className="chip-number-badge"
-                    style={{ backgroundColor: o.color }}
+                    key={o.id}
+                    className={`odds-runner-chip ${isFav ? 'chip-favorite' : ''} ${isLocked ? 'chip-locked' : ''} ${podiumClass} ${isHorseRainbow ? 'rainbow-card-shine' : ''} ${isWrapped ? 'is-grid-cell' : ''}`}
+                    onClick={() => onSelectOutcome && onSelectOutcome(o.id)}
+                    title={`#${o.number} ${o.name} - Odds: ${o.odds.toFixed(2)}x - Bets: ${runnerBetsTotal > 0 ? runnerShare.toFixed(1) : '0'}% (${o.totalBet.toLocaleString()} pts)${podiumBadge ? ` [${podiumBadge}]` : ''} • Click to place House Bet (+${houseConfig?.betAmount || 500} pts as ${houseConfig?.name || 'The House'})`}
                   >
-                    #{o.number}
+                    {/* Entrant Info (Number, Icon, Full Name) */}
+                    <div className="chip-entrant-info">
+                      <div
+                        className="chip-number-badge"
+                        style={{ backgroundColor: o.color }}
+                      >
+                        #{o.number}
+                      </div>
+
+                      <span className="chip-icon-thumb">
+                        <IconDisplay icon={o.icon} className="chip-icon-img" />
+                      </span>
+
+                      <span className="chip-horse-name" title={o.name}>{o.name}</span>
+                    </div>
+
+                    {/* Odds & Status Info (Multiplier, Pool %, Badges) */}
+                    <div className="chip-odds-info">
+                      {podiumBadge && (
+                        <span className={`chip-podium-badge badge-place-${podiumPlace}`} title={`${podiumBadge} Place`}>
+                          {podiumBadge}
+                        </span>
+                      )}
+
+                      <span className="chip-odds-multiplier">
+                        {o.odds.toFixed(2)}x
+                      </span>
+
+                      {runnerBetsTotal > 0 && o.totalBet > 0 && (
+                        <span className="chip-pool-percentage">
+                          {runnerShare.toFixed(0)}%
+                        </span>
+                      )}
+
+                      {isLocked && (
+                        <Lock size={10} className="chip-locked-icon" color="#ef4444" />
+                      )}
+
+                      {isFav && !isPodiumWin && (
+                        <span className="chip-fav-badge" title="Current Favorite">
+                          ⚡ FAV
+                        </span>
+                      )}
+                    </div>
                   </div>
+                );
+              })}
+            </div>
+          </div>
 
-                  <span className="chip-icon-thumb">
-                    <IconDisplay icon={o.icon} className="chip-icon-img" />
-                  </span>
-
-                  <span className="chip-horse-name" title={o.name}>{o.name}</span>
-                </div>
-
-                {/* Odds & Status Info (Multiplier, Pool %, Badges) */}
-                <div className="chip-odds-info">
-                  {podiumBadge && (
-                    <span className={`chip-podium-badge badge-place-${podiumPlace}`} title={`${podiumBadge} Place`}>
-                      {podiumBadge}
-                    </span>
-                  )}
-
-                  <span className="chip-odds-multiplier">
-                    {o.odds.toFixed(2)}x
-                  </span>
-
-                  {runnerBetsTotal > 0 && o.totalBet > 0 && (
-                    <span className="chip-pool-percentage">
-                      {runnerShare.toFixed(0)}%
-                    </span>
-                  )}
-
-                  {isLocked && (
-                    <Lock size={10} className="chip-locked-icon" color="#ef4444" />
-                  )}
-
-                  {isFav && !isPodiumWin && (
-                    <span className="chip-fav-badge" title="Current Favorite">
-                      ⚡ FAV
-                    </span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Bottom Drag Resizer Handle */}
-      <div
-        className={`odds-bar-resize-handle ${isDraggingHandle ? 'is-dragging' : ''}`}
-        onMouseDown={handleStartResize}
-        onDoubleClick={handleDoubleClickHandle}
-        title="Drag down to expand odds window & wrap horses into grid (double-click to toggle)"
-      >
-        <div className="odds-resize-grip-line" />
-      </div>
+          {/* Bottom Drag Resizer Handle */}
+          <div
+            className={`odds-bar-resize-handle ${isDraggingHandle ? 'is-dragging' : ''}`}
+            onMouseDown={handleStartResize}
+            onDoubleClick={handleDoubleClickHandle}
+            title="Drag down to expand odds window & wrap horses into grid (double-click to toggle)"
+          >
+            <div className="odds-resize-grip-line" />
+          </div>
+        </>
+      )}
     </div>
   );
 };

@@ -228,7 +228,9 @@ export interface BucketConfig {
   rightOffset: number;  // px offset from right edge of screen
   bottomMargin: number; // px offset from bottom of screen
   height: number;       // height of bucket in px
-  hideWalls: boolean;   // if true, walls/container are hidden in capture/overlay
+  hideWalls?: boolean;  // legacy alias for !backgroundVisible
+  backgroundVisible?: boolean; // if true, themed panel background is visible behind tokens
+  enableTokens?: boolean;      // toggle physical tokens on/off (if false, tokens are disabled entirely)
   showCalibrationGuide?: boolean; // if true, shows dashed boundary guides for alignment
   combineThresholdPerUser?: number; // min tokens per viewer before fusion triggers (default: 40)
   maxArenaTokens?: number;          // global max active tokens allowed in hopper (default: 800)
