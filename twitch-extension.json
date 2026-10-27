@@ -18,7 +18,7 @@
       "can_link_external_content": false
     },
     "live_config": {
-      "viewer_url": "config.html"
+      "viewer_url": "dashboard.html"
     },
     "video_overlay": {
       "viewer_url": "index.html?obs=1",

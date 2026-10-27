@@ -39,6 +39,7 @@ import { TopbarPresetsDropdown } from './components/TopbarPresetsDropdown';
 import { HorseEditorModal } from './components/HorseEditorModal';
 import { BetLogModal } from './components/BetLogModal';
 import { AdminUnlockModal } from './components/AdminUnlockModal';
+import { OnboardingModal } from './components/OnboardingModal';
 import { HopperBoundsPreviewOverlay } from './components/HopperBoundsPreviewOverlay';
 import { HopperBackdropPanel } from './components/HopperBackdropPanel';
 import { ViewerView } from './components/ViewerView';
@@ -47,8 +48,9 @@ import { isImageSource } from './components/IconDisplay';
 import { soundEffects } from './services/soundEffects';
 import { twitchChatService } from './services/twitchChatService';
 import { storageService, onStreamSync, broadcastStreamSync, claimBetProcessing, claimTokenUpdateProcessing } from './services/storageService';
+import { twitchExtensionService } from './services/twitchExtensionService';
 import { styleService } from './services/styleService';
-import { Settings, Tv, Volume2, VolumeX, Lock, Play, RotateCcw, Trophy, Sliders, Layers, FileText, ShieldCheck, ShieldAlert, ChevronRight, ChevronLeft, RefreshCw } from 'lucide-react';
+import { Settings, Tv, Volume2, VolumeX, Lock, Play, RotateCcw, Trophy, Sliders, Layers, FileText, ShieldCheck, ShieldAlert, ChevronRight, ChevronLeft, RefreshCw, HelpCircle } from 'lucide-react';
 import './index.css';
 
 // Initial 20-Horse Race Contest
@@ -401,7 +403,10 @@ function App() {
       isIframe = true;
     }
 
-    // 0. Dedicated HTML file entry points (config.html, panel.html, viewer.html)
+    // 0. Dedicated HTML file entry points (config.html, panel.html, viewer.html, dashboard.html)
+    if (explicitHtmlMode === 'dashboard' || pathname.endsWith('dashboard.html')) {
+      return 'full';
+    }
     if (explicitHtmlMode === 'config' || pathname.endsWith('config.html')) {
       return 'config';
     }
@@ -423,17 +428,22 @@ function App() {
       return 'config';
     }
 
-    // 2. OBS / Video Overlay mode
+    // 2. Explicit GM Dashboard mode (from query param or Twitch Creator Live Dashboard)
+    if (mode === 'dashboard' || params.get('dashboard') === '1') {
+      return 'full';
+    }
+
+    // 3. OBS / Video Overlay mode
     if (mode === 'obs' || params.get('obs') === '1' || params.get('overlay') === '1' || params.get('anchor') === 'video_overlay') {
       return 'obs';
     }
 
-    // 3. Compact / Minimal HUD modes
+    // 4. Compact / Minimal HUD modes
     if (mode === 'compact' || mode === 'minimal') {
       return mode;
     }
 
-    // 4. Viewer / Mobile / Panel mode
+    // 5. Viewer / Mobile / Panel mode
     if (
       mode === 'viewer' ||
       mode === 'panel' ||
@@ -446,10 +456,10 @@ function App() {
       return 'viewer';
     }
 
-    // 5. Embedded inside any iframe on Twitch:
+    // 6. Embedded inside any iframe on Twitch:
     // Always default to viewer mode (unless explicitly requesting 'dashboard')
     if (isIframe) {
-      if (mode === 'dashboard') return 'full';
+      if (mode === 'dashboard' || explicitHtmlMode === 'dashboard' || pathname.endsWith('dashboard.html')) return 'full';
       return 'viewer';
     }
 
@@ -613,8 +623,34 @@ function App() {
   };
 
   // Admin & Permission Security State
-  const [isAdmin, setIsAdmin] = useState<boolean>(() => storageService.isAdminUnlocked());
+  const [isAdmin, setIsAdmin] = useState<boolean>(() => storageService.isAdminUnlocked() || twitchExtensionService.getIsBroadcaster());
   const [isAdminModalOpen, setIsAdminModalOpen] = useState<boolean>(false);
+  const [isTwitchExtBroadcaster, setIsTwitchExtBroadcaster] = useState<boolean>(() => twitchExtensionService.getIsBroadcaster());
+
+  // Auto-unlock GM Admin controls if authenticated cryptographically as the Broadcaster by Twitch
+  useEffect(() => {
+    const unsub = twitchExtensionService.onAuth((_auth, isBroadcaster) => {
+      if (isBroadcaster) {
+        setIsTwitchExtBroadcaster(true);
+        setIsAdmin(true);
+        storageService.setAdminUnlocked(true);
+      }
+    });
+    return unsub;
+  }, []);
+
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('obs') === '1' || params.get('viewer') === '1' || params.get('panel') === '1' || params.get('config') === '1' || params.get('dashboard') === '1') {
+      return false;
+    }
+    const pathname = window.location.pathname.toLowerCase();
+    if (pathname.includes('obs.html') || pathname.includes('panel.html') || pathname.includes('viewer.html') || pathname.includes('config.html') || pathname.includes('dashboard.html')) {
+      return false;
+    }
+    return !storageService.hasSeenOnboarding();
+  });
 
   const lockBetsRef = useRef<() => void>(() => { });
   const reopenBetsRef = useRef<() => void>(() => { });
@@ -2528,7 +2564,13 @@ function App() {
               <button
                 className={`cyber-nav-btn btn-admin-badge ${isAdmin ? 'admin-badge-unlocked' : 'admin-badge-locked'}`}
                 onClick={() => setIsAdminModalOpen(true)}
-                title={isAdmin ? "Streamer GM Admin Controls Unlocked. Click to lock or manage passcode." : "Viewer Mode Active (Admin controls locked). Click to enter Streamer Passcode."}
+                title={
+                  isTwitchExtBroadcaster
+                    ? "Twitch Broadcaster Authenticated — Live PubSub sync active to all viewer panels!"
+                    : isAdmin
+                    ? "Streamer GM Admin Controls Unlocked. Click to lock or manage passcode."
+                    : "Viewer Mode Active (Admin controls locked). Click to enter Streamer Passcode."
+                }
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -2540,7 +2582,7 @@ function App() {
               >
                 {isAdmin ? <ShieldCheck size={15} color="#10b981" /> : <ShieldAlert size={15} color="#f59e0b" />}
                 <span style={{ fontSize: '0.78rem', fontWeight: 700, color: isAdmin ? '#10b981' : '#f59e0b' }}>
-                  {isAdmin ? 'GM' : 'Viewer'}
+                  {isAdmin ? (isTwitchExtBroadcaster ? 'GM • Twitch' : 'GM') : 'Viewer'}
                 </span>
               </button>
 
@@ -2566,6 +2608,15 @@ function App() {
                 title="Toggle View, Physics & Camera Controls Menu"
               >
                 <Sliders size={15} color={isViewControlsOpen ? '#d97706' : '#7D6B42'} />
+              </button>
+
+              {/* 7. Quickstart Tour & Guide (Icon Only) */}
+              <button
+                className={`cyber-nav-btn btn-icon-only btn-help ${isOnboardingOpen ? 'active' : ''}`}
+                onClick={() => setIsOnboardingOpen(true)}
+                title="TokenPile Quickstart Guide & Onboarding"
+              >
+                <HelpCircle size={15} color="#06b6d4" />
               </button>
 
               {/* 7. Stream / OBS Logo Mode Toggle (Collapses controls to right for clean logo area) */}
@@ -3010,6 +3061,7 @@ function App() {
         onUpdateActiveStyle={handleUpdateActiveStyle}
         oddsMode={contest.oddsMode || 'auto'}
         onToggleOddsMode={handleToggleOddsMode}
+        onOpenOnboarding={() => setIsOnboardingOpen(true)}
       />
 
       {/* Centralized Add Horse & Bulk Paste Window */}
@@ -3037,6 +3089,25 @@ function App() {
         onUnlock={handleAdminUnlock}
         onLock={handleAdminLock}
         onUpdatePasscode={handleUpdateAdminPasscode}
+      />
+
+      {/* First-Time User Onboarding & Quickstart Modal */}
+      <OnboardingModal
+        isOpen={isOnboardingOpen}
+        onClose={() => setIsOnboardingOpen(false)}
+        isAdmin={isAdmin}
+        onOpenGMUnlock={() => {
+          setIsOnboardingOpen(false);
+          setIsAdminModalOpen(true);
+        }}
+        onOpenSettings={() => {
+          setIsOnboardingOpen(false);
+          if (!isAdmin) {
+            setIsAdminModalOpen(true);
+          } else {
+            setIsSettingsOpen(true);
+          }
+        }}
       />
     </div>
   );

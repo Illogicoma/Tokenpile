@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import type { Contest, BetOutcome, UserTokenConfig } from '../types/betting';
 import { soundEffects } from '../services/soundEffects';
-import { broadcastStreamSync, onStreamSync } from '../services/storageService';
+import { storageService, broadcastStreamSync } from '../services/storageService';
 import { twitchExtensionService } from '../services/twitchExtensionService';
+import { streamRelayService } from '../services/streamRelayService';
 import { PerformantTokenPreview } from './PerformantTokenPreview';
 import { IconPicker } from './IconPicker';
 import { IconDisplay, isImageSource } from './IconDisplay';
@@ -75,12 +76,35 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
   }, [initialContest]);
 
   useEffect(() => {
-    const unsubscribe = onStreamSync((data) => {
-      if (data.type === 'CONTEST_UPDATED' && data.payload) {
-        setLiveContest(data.payload);
-      }
+    const unsubscribe = streamRelayService.onContestUpdate((updatedContest) => {
+      setLiveContest(updatedContest);
     });
     return unsubscribe;
+  }, []);
+
+  // Load broadcaster's persistent entrant roster & contest settings from Twitch Configuration Service
+  useEffect(() => {
+    const handleTwitchConfigSync = () => {
+      const config = twitchExtensionService.getConfiguration('broadcaster');
+      if (config?.content) {
+        try {
+          const parsed = JSON.parse(config.content);
+          if (parsed?.contest) {
+            setLiveContest(prev => ({
+              ...prev,
+              ...parsed.contest,
+              outcomes: parsed.contest.outcomes || prev.outcomes
+            }));
+          }
+        } catch (e) {
+          console.warn('[ViewerView] Could not parse broadcaster config:', e);
+        }
+      }
+    };
+
+    handleTwitchConfigSync();
+    const unsub = twitchExtensionService.onConfigurationChanged(handleTwitchConfigSync);
+    return unsub;
   }, []);
 
   // --- JACKBOX-STYLE JOIN / SESSION STATE ---
@@ -140,7 +164,7 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
   const [isTwitchExt, setIsTwitchExt] = useState(() => twitchExtensionService.isExtensionEnvironment());
   const [isIdentityShared, setIsIdentityShared] = useState(() => twitchExtensionService.isIdentityShared());
   const [twitchChannelId, setTwitchChannelId] = useState<string | null>(() => twitchExtensionService.getChannelId());
-  const [, setIsBroadcaster] = useState(() => twitchExtensionService.getIsBroadcaster());
+  const [isBroadcaster, setIsBroadcaster] = useState(() => twitchExtensionService.getIsBroadcaster());
 
   // Track if connected to streamer's room (Auto-connected if in Twitch Extension, iframe, or channel present in query / localStorage)
   const [isConnected, setIsConnected] = useState<boolean>(() => {
@@ -181,8 +205,9 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
         setChannelInput(auth.channelId);
       }
 
-      if (shared && auth.userId) {
-        setUsernameInput(prev => prev.startsWith('Lucky_') ? `Twitch_${auth.userId.slice(-4)}` : prev);
+      if ((shared || isBroadcasterRole) && (auth.userId || twitchExtensionService.getUserId())) {
+        const uid = auth.userId || twitchExtensionService.getUserId() || '';
+        setUsernameInput(prev => prev.startsWith('Lucky_') ? (isBroadcasterRole ? 'Broadcaster' : `Twitch_${uid.slice(-4)}`) : prev);
       }
 
       setIsConnected(true);
@@ -248,6 +273,20 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 2800);
+  };
+
+  const handleRequestIdentityLink = () => {
+    if (isBroadcaster || twitchExtensionService.isIdentityShared()) {
+      setIsIdentityShared(true);
+      showToast('Twitch account verified!');
+      return;
+    }
+    const sent = twitchExtensionService.requestIdentityShare();
+    if (sent) {
+      showToast('Please check the Twitch prompt to share your Twitch ID.');
+    } else {
+      showToast('Identity prompt not available. (Check Extension Capabilities in Twitch Console).');
+    }
   };
 
   // Persist balance & active bet
@@ -420,8 +459,7 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
       : `viewer_${usernameInput.toLowerCase()}`;
 
     // Broadcast bet request to Streamer OBS via BroadcastChannel & Twitch PubSub Whisper
-    broadcastStreamSync('VIEWER_BET_REQUEST', {
-      betId: newBet.id,
+    streamRelayService.sendViewerBet({
       userId: effectiveUserId,
       userName: usernameInput,
       amount,
@@ -431,16 +469,27 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
       userConfig: tokenConfig
     });
 
+    // Auto-copy chat command so viewer can paste into Twitch chat
+    const botPrefix = storageService.getTwitchChatConfig().botPrefix || '!bet';
+    const chatCmd = `${botPrefix} ${targetOutcome.number} ${amount}`;
+    try {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(chatCmd).catch(() => {});
+      }
+    } catch { }
+
     soundEffects.playBetDrop();
-    showToast(`Bet placed: ${amount.toLocaleString()} pts on #${targetOutcome.number} ${targetOutcome.name}!`);
+    showToast(`✓ Copied "${chatCmd}" to clipboard! Paste into Twitch Chat to drop on stream.`);
 
     // Reset selection drawer
     setSelectedOutcomeId(null);
   };
 
   // Copy Twitch Chat Command to clipboard
-  const handleCopyChatCommand = (outcome: BetOutcome, amount: number) => {
-    const cmd = `!bet ${outcome.number} ${amount}`;
+  const handleCopyChatCommand = (outcomeOrNumber: BetOutcome | number, amount: number) => {
+    const num = typeof outcomeOrNumber === 'number' ? outcomeOrNumber : outcomeOrNumber.number;
+    const botPrefix = storageService.getTwitchChatConfig().botPrefix || '!bet';
+    const cmd = `${botPrefix} ${num} ${amount}`;
     try {
       if (navigator.clipboard) {
         navigator.clipboard.writeText(cmd);
@@ -612,12 +661,12 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
           <div
             className={`viewer-channel-pill ${isTwitchExt ? 'is-twitch' : ''}`}
             onClick={handleDisconnect}
-            title={isTwitchExt ? `Twitch Extension Connected (Channel #${twitchChannelId || channelInput})` : "Click to disconnect or switch room"}
+            title={isTwitchExt ? "Twitch Extension Connected" : "Click to disconnect or switch room"}
           >
             <span className={`viewer-channel-dot ${isTwitchExt ? 'is-twitch-dot' : ''}`} />
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
               {isTwitchExt && <TwitchGlitchIcon size={11} color="#a855f7" />}
-              {isTwitchExt ? `Twitch #${twitchChannelId || channelInput || 'Live'}` : channelInput}
+              {isTwitchExt ? 'Twitch Live' : channelInput}
             </span>
           </div>
 
@@ -684,8 +733,8 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
             =================================================================== */}
         {activeTab === 'slip' && (
           <>
-            {/* Twitch Extension Identity Link Prompt */}
-            {isTwitchExt && !isIdentityShared && (
+            {/* Twitch Extension Identity Link Prompt (Hidden for Broadcaster or linked users) */}
+            {isTwitchExt && !isIdentityShared && !isBroadcaster && (
               <div className="twitch-link-banner">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                   <TwitchGlitchIcon size={14} color="#a855f7" />
@@ -694,7 +743,7 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
                 <button
                   type="button"
                   className="twitch-link-btn"
-                  onClick={() => twitchExtensionService.requestIdentityShare()}
+                  onClick={handleRequestIdentityLink}
                 >
                   Link
                 </button>
@@ -737,6 +786,34 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
                     )}
                   </div>
                 </div>
+
+                {activeBet.status === 'pending' && (
+                  <div style={{ marginTop: '0.45rem', paddingTop: '0.45rem', borderTop: '1px dashed rgba(245, 158, 11, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.4rem', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--vm-text-muted)' }}>
+                      Drop tokens on stream:
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyChatCommand(activeBet.horseNumber, activeBet.amount)}
+                      style={{
+                        background: 'rgba(168, 85, 247, 0.15)',
+                        border: '1px solid rgba(168, 85, 247, 0.35)',
+                        borderRadius: '6px',
+                        padding: '0.2rem 0.55rem',
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        color: '#a855f7',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.3rem'
+                      }}
+                    >
+                      <Copy size={11} />
+                      <span>Copy <code>{storageService.getTwitchChatConfig().botPrefix || '!bet'} {activeBet.horseNumber} {activeBet.amount}</code> for Chat</span>
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1055,9 +1132,10 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
               className="viewer-place-bet-btn"
               onClick={handlePlaceBet}
               disabled={liveContest.status !== 'open'}
+              title="Place bet and copy chat command to drop tokens on stream"
             >
               <Coins size={14} />
-              <span>{liveContest.status === 'open' ? 'PLACE BET' : 'BETS LOCKED'}</span>
+              <span>{liveContest.status === 'open' ? 'PLACE BET & COPY CHAT CMD' : 'BETS LOCKED'}</span>
             </button>
           </div>
 
@@ -1065,9 +1143,10 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
           <div
             className="viewer-twitch-chat-pill"
             onClick={() => handleCopyChatCommand(selectedOutcome, parseInt(wagerAmountInput, 10) || 500)}
+            title="Click to copy chat command"
           >
-            <Copy size={11} />
-            <span>Copy Twitch Chat Command (!bet {selectedOutcome.number} {wagerAmountInput})</span>
+            <Copy size={12} />
+            <span>Copy <code>{storageService.getTwitchChatConfig().botPrefix || '!bet'} {selectedOutcome.number} {wagerAmountInput}</code> for Twitch Chat</span>
           </div>
         </div>
       )}

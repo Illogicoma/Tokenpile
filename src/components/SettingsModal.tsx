@@ -29,7 +29,8 @@ import {
   Lock,
   Unlock,
   ShieldCheck,
-  Percent
+  Percent,
+  HelpCircle
 } from 'lucide-react';
 import type {
   UserTokenConfig,
@@ -84,6 +85,7 @@ interface SettingsModalProps {
   onUpdateActiveStyle?: (style: string) => void;
   oddsMode?: OddsMode;
   onToggleOddsMode?: (mode?: OddsMode) => void;
+  onOpenOnboarding?: () => void;
 }
 
 export const SettingsModal = ({
@@ -117,7 +119,8 @@ export const SettingsModal = ({
   activeStyle,
   onUpdateActiveStyle,
   oddsMode = 'auto',
-  onToggleOddsMode
+  onToggleOddsMode,
+  onOpenOnboarding
 }: SettingsModalProps) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('twitch');
   const [twitchConfig, setTwitchConfig] = useState<TwitchChatConfig>(() => twitchChatService.getConfig());
@@ -143,41 +146,54 @@ export const SettingsModal = ({
   const [prizeAddedMsg, setPrizeAddedMsg] = useState(false);
 
   // OBS Studio & Stream Overlay URLs
-  const [copiedKey, setCopiedKey] = useState<'overlay' | 'dock' | 'viewer' | 'panel' | null>(null);
+  const [copiedKey, setCopiedKey] = useState<'overlay' | 'dock' | 'viewer' | 'panel' | 'dashboard' | null>(null);
 
   const getCleanChannel = () => {
     return twitchConfig.channel ? twitchChatService.cleanChannelName(twitchConfig.channel) : '';
   };
 
+  const getAppBaseUrl = () => {
+    if (typeof window === 'undefined') return '';
+    const path = window.location.pathname.replace(/\/[^/]*$/, '');
+    return `${window.location.origin}${path}`;
+  };
+
   const getDockUrl = () => {
     if (typeof window === 'undefined') return '';
-    return `${window.location.origin}/index.html`;
+    return `${getAppBaseUrl()}/index.html`;
   };
 
   const getOverlayUrl = () => {
     if (typeof window === 'undefined') return '';
     const chan = getCleanChannel();
-    return `${window.location.origin}/obs.html${chan ? `?channel=${chan}` : ''}`;
+    return `${getAppBaseUrl()}/obs.html${chan ? `?channel=${chan}` : ''}`;
   };
 
   const getViewerUrl = () => {
     if (typeof window === 'undefined') return '';
     const chan = getCleanChannel();
-    return `${window.location.origin}/viewer.html${chan ? `?channel=${chan}` : ''}`;
+    return `${getAppBaseUrl()}/viewer.html${chan ? `?channel=${chan}` : ''}`;
   };
 
   const getPanelExtensionUrl = () => {
     if (typeof window === 'undefined') return '';
     const chan = getCleanChannel();
-    return `${window.location.origin}/panel.html${chan ? `?channel=${chan}` : ''}`;
+    return `${getAppBaseUrl()}/panel.html${chan ? `?channel=${chan}` : ''}`;
   };
 
-  const handleCopyObsUrl = (type: 'overlay' | 'dock' | 'viewer' | 'panel') => {
+  const getDashboardExtensionUrl = () => {
+    if (typeof window === 'undefined') return '';
+    const chan = getCleanChannel();
+    return `${getAppBaseUrl()}/dashboard.html${chan ? `?channel=${chan}` : ''}`;
+  };
+
+  const handleCopyObsUrl = (type: 'overlay' | 'dock' | 'viewer' | 'panel' | 'dashboard') => {
     let url = '';
     if (type === 'overlay') url = getOverlayUrl();
     else if (type === 'dock') url = getDockUrl();
     else if (type === 'viewer') url = getViewerUrl();
     else if (type === 'panel') url = getPanelExtensionUrl();
+    else if (type === 'dashboard') url = getDashboardExtensionUrl();
 
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url);
@@ -1033,6 +1049,37 @@ export const SettingsModal = ({
                     </code>
                   </div>
 
+                  {/* URL 5: Twitch Live Dashboard Extension URL */}
+                  <div className="obs-url-card">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.4rem' }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.82rem', color: 'var(--text-primary, #5A4A28)' }}>
+                        🎮 Twitch Live Dashboard URL <span style={{ fontWeight: 400, fontSize: '0.7rem', color: 'var(--text-muted)' }}>(Twitch Developer Console &rarr; Live Dashboard / OBS Custom Dock)</span>
+                      </span>
+                      <div style={{ display: 'flex', gap: '0.35rem' }}>
+                        <button
+                          type="button"
+                          className="cyber-btn-ghost mini-btn"
+                          onClick={() => handleCopyObsUrl('dashboard')}
+                          style={{ fontSize: '0.72rem', padding: '0.25rem 0.6rem' }}
+                        >
+                          {copiedKey === 'dashboard' ? <><Check size={12} color="#16a34a" /> Copied!</> : <><Copy size={12} /> Copy Dashboard URL</>}
+                        </button>
+                        <button
+                          type="button"
+                          className="cyber-btn-ghost mini-btn"
+                          onClick={() => window.open(getDashboardExtensionUrl(), '_blank')}
+                          title="Preview Live Dashboard in new tab"
+                          style={{ fontSize: '0.72rem', padding: '0.25rem 0.5rem' }}
+                        >
+                          <ExternalLink size={12} />
+                        </button>
+                      </div>
+                    </div>
+                    <code className="obs-url-code">
+                      {getDashboardExtensionUrl()}
+                    </code>
+                  </div>
+
                   {/* Twitch Extension PubSub Info Banner */}
                   <div style={{
                     marginTop: '0.8rem',
@@ -1045,7 +1092,7 @@ export const SettingsModal = ({
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, color: '#9146ff', marginBottom: '0.25rem' }}>
                       <Radio size={14} />
-                      <span>Twitch Extension PubSub Active (Zero Hosting Cost &amp; No Limits)</span>
+                      <span>Twitch Extension PubSub Active</span>
                     </div>
                     <div>
                       Contest state, runner odds, and pool changes are broadcast to all viewer panels in real time via Twitch&apos;s free built-in PubSub network. Viewers can link their Twitch account with 1 click to authenticate securely.
@@ -2069,9 +2116,28 @@ export const SettingsModal = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="modal-footer">
-          <button className="cyber-btn-secondary" onClick={onClose}>Close</button>
-          <button className="cyber-btn-primary" onClick={handleSaveConfig}>Save Settings</button>
+        <div className="modal-footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            {onOpenOnboarding && (
+              <button
+                type="button"
+                className="cyber-btn-secondary mini-btn"
+                onClick={() => {
+                  onClose();
+                  onOpenOnboarding();
+                }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: '#06b6d4', borderColor: 'rgba(6, 182, 212, 0.35)' }}
+                title="Open TokenPile Quickstart Guide & Feature Tour"
+              >
+                <HelpCircle size={13} color="#06b6d4" />
+                <span>Quickstart Guide</span>
+              </button>
+            )}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <button className="cyber-btn-secondary" onClick={onClose}>Close</button>
+            <button className="cyber-btn-primary" onClick={handleSaveConfig}>Save Settings</button>
+          </div>
         </div>
       </div>
     </div>

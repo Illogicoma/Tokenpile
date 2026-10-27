@@ -704,14 +704,31 @@
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  font-size: 0.72rem;
-  color: var(--vm-text-muted);
-  margin-top: 0.4rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #a855f7;
+  background: rgba(168, 85, 247, 0.08);
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  border-radius: 8px;
+  padding: 0.35rem 0.5rem;
+  margin-top: 0.45rem;
   cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
 }
 
 .viewer-twitch-chat-pill:hover {
-  color: #d97706;
+  background: rgba(168, 85, 247, 0.18);
+  border-color: #a855f7;
+  color: #9333ea;
+  transform: translateY(-1px);
+}
+
+.viewer-twitch-chat-pill code {
+  font-family: var(--font-family-mono, monospace);
+  background: rgba(168, 85, 247, 0.15);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
 }
 
 /* --- TAB 2: MY COIN STUDIO --- */

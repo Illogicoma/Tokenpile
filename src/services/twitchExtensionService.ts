@@ -65,6 +65,13 @@ declare global {
           followChannel: (channelName: string) => void;
           minimize: () => void;
         };
+        viewer?: {
+          isLinked?: boolean;
+          id?: string;
+          opaqueId?: string;
+          role?: string;
+          sessionToken?: string;
+        };
         configuration?: {
           broadcaster?: { version: string; content: string };
           developer?: { version: string; content: string };
@@ -232,33 +239,57 @@ class TwitchExtensionService {
    * Returns the viewer's user ID (if shared) or opaque ID
    */
   public getUserId(): string | null {
+    if (typeof window !== 'undefined' && window.Twitch?.ext?.viewer?.id) {
+      return window.Twitch.ext.viewer.id;
+    }
     return this.auth?.userId || this.jwtPayload?.user_id || this.jwtPayload?.opaque_user_id || null;
   }
 
   /**
    * Returns true if the user has shared their real Twitch identity (not opaque U...)
+   * Also returns true if the user is the channel's Broadcaster (inherently authenticated).
    */
   public isIdentityShared(): boolean {
-    if (!this.auth?.userId) return false;
+    if (typeof window !== 'undefined' && window.Twitch?.ext?.viewer?.isLinked) {
+      return true;
+    }
+    if (this.getIsBroadcaster()) {
+      return true;
+    }
+    const uid = this.getUserId();
+    if (!uid) return false;
     // Opaque user IDs in Twitch start with 'U' (unlinked viewer) or 'A' (anonymous)
-    return !this.auth.userId.startsWith('U') && !this.auth.userId.startsWith('A');
+    return !uid.startsWith('U') && !uid.startsWith('A');
   }
 
   /**
    * Returns true if the user is the Broadcaster of the channel
    */
   public getIsBroadcaster(): boolean {
-    if (!this.jwtPayload) return false;
-    return this.jwtPayload.role === 'broadcaster';
+    if (this.jwtPayload?.role === 'broadcaster') return true;
+    if (typeof window !== 'undefined' && window.Twitch?.ext?.viewer?.role === 'broadcaster') return true;
+    return false;
   }
 
   /**
    * Prompt Twitch viewer to share their Twitch Identity
    */
-  public requestIdentityShare(): void {
-    if (typeof window !== 'undefined' && window.Twitch?.ext?.actions?.requestIdShare) {
-      window.Twitch.ext.actions.requestIdShare();
+  public requestIdentityShare(): boolean {
+    if (typeof window === 'undefined') return false;
+    if (this.isIdentityShared() || this.getIsBroadcaster()) {
+      return true;
     }
+    if (window.Twitch?.ext?.actions?.requestIdShare) {
+      try {
+        window.Twitch.ext.actions.requestIdShare();
+        return true;
+      } catch (e) {
+        console.warn('[TwitchExt] requestIdShare error:', e);
+        return false;
+      }
+    }
+    console.warn('[TwitchExt] window.Twitch.ext.actions.requestIdShare is not available');
+    return false;
   }
 
   /**
@@ -307,9 +338,14 @@ class TwitchExtensionService {
     }
 
     try {
+      let finalPayload = payload;
+      if (type === 'CONTEST_UPDATED' && payload?.outcomes) {
+        finalPayload = this.minifyContestForPubSub(payload);
+      }
+
       const msg: TwitchPubSubMessage = {
         type,
-        payload,
+        payload: finalPayload,
         timestamp: Date.now(),
         senderRole: this.jwtPayload?.role || 'broadcaster'
       };
@@ -318,12 +354,7 @@ class TwitchExtensionService {
 
       // Twitch PubSub message length limit is 5120 bytes
       if (jsonStr.length > 5100) {
-        console.warn(`[TwitchExt] PubSub message payload is too large (${jsonStr.length} bytes), truncating non-essential fields.`);
-        // If it's a contest, minify the outcomes
-        if (type === 'CONTEST_UPDATED' && payload?.outcomes) {
-          const minifiedContest = this.minifyContestForPubSub(payload);
-          return this.broadcast(type, minifiedContest);
-        }
+        console.warn(`[TwitchExt] PubSub message payload is too large (${jsonStr.length} bytes).`);
         return false;
       }
 

@@ -21,6 +21,7 @@ const ACTIVE_STYLE_KEY = 'TokenPile_active_style';
 const ADMIN_PASSCODE_KEY = 'TokenPile_admin_passcode';
 const ADMIN_UNLOCKED_KEY = 'TokenPile_admin_unlocked';
 const DEFAULT_ADMIN_PASSCODE = 'admin123';
+const HAS_SEEN_ONBOARDING_KEY = 'TokenPile_has_seen_onboarding';
 
 // BroadcastChannel for instant OBS Browser Source <-> Admin Control sync
 // Generate unique client ID to prevent echo loops
@@ -160,9 +161,18 @@ export const broadcastStreamSync = (type: string, payload: any) => {
     } catch { }
   }
 
-  // Forward to Twitch Extension PubSub
+  // Forward to Twitch Extension PubSub and Configuration Service
   try {
-    if (type === 'CONTEST_UPDATED' || type === 'ACTIVE_STYLE_UPDATED') {
+    if (type === 'CONTEST_UPDATED') {
+      const minified = twitchExtensionService.minifyContestForPubSub(payload);
+      twitchExtensionService.broadcast(type, minified);
+      if (twitchExtensionService.getIsBroadcaster()) {
+        twitchExtensionService.setConfiguration('broadcaster', '1.0', {
+          contest: minified,
+          updatedAt: Date.now()
+        });
+      }
+    } else if (type === 'ACTIVE_STYLE_UPDATED') {
       twitchExtensionService.broadcast(type, payload);
     } else if (type === 'VIEWER_BET_REQUEST' || type === 'VIEWER_TOKEN_UPDATED') {
       const channelId = twitchExtensionService.getChannelId();
@@ -1188,6 +1198,20 @@ export const storageService = {
     const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || window.location.protocol === 'file:';
     const isObs = Boolean((window as any).obsstudio) || (typeof navigator !== 'undefined' && navigator.userAgent.includes('OBS'));
     return isLocal || isObs;
+  },
+
+  hasSeenOnboarding(): boolean {
+    try {
+      return localStorage.getItem(HAS_SEEN_ONBOARDING_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  },
+
+  setSeenOnboarding(seen: boolean = true): void {
+    try {
+      localStorage.setItem(HAS_SEEN_ONBOARDING_KEY, seen ? 'true' : 'false');
+    } catch { }
   }
 };
 

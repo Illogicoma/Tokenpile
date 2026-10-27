@@ -165,6 +165,7 @@ export default defineConfig({
         panel: resolve(__dirname, 'panel.html'),
         config: resolve(__dirname, 'config.html'),
         viewer: resolve(__dirname, 'viewer.html'),
+        dashboard: resolve(__dirname, 'dashboard.html'),
         obs: resolve(__dirname, 'obs.html'),
         testbench: resolve(__dirname, 'testbench.html'),
       },
