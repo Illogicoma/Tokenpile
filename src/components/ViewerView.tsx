@@ -421,6 +421,7 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
 
     // Broadcast bet request to Streamer OBS via BroadcastChannel & Twitch PubSub Whisper
     broadcastStreamSync('VIEWER_BET_REQUEST', {
+      betId: newBet.id,
       userId: effectiveUserId,
       userName: usernameInput,
       amount,
@@ -918,7 +919,9 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
                   const effectiveUserId = isIdentityShared && twitchExtensionService.getUserId()
                     ? `twitch_${twitchExtensionService.getUserId()}`
                     : `viewer_${usernameInput.toLowerCase()}`;
+                  const updateId = `vtu_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
                   broadcastStreamSync('VIEWER_TOKEN_UPDATED', {
+                    updateId,
                     userId: effectiveUserId,
                     userName: usernameInput,
                     config: tokenConfig

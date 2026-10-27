@@ -46,7 +46,7 @@ import { ConfigView } from './components/ConfigView';
 import { isImageSource } from './components/IconDisplay';
 import { soundEffects } from './services/soundEffects';
 import { twitchChatService } from './services/twitchChatService';
-import { storageService, onStreamSync, broadcastStreamSync } from './services/storageService';
+import { storageService, onStreamSync, broadcastStreamSync, claimBetProcessing, claimTokenUpdateProcessing } from './services/storageService';
 import { styleService } from './services/styleService';
 import { Settings, Tv, Volume2, VolumeX, Lock, Play, RotateCcw, Trophy, Sliders, Layers, FileText, ShieldCheck, ShieldAlert, ChevronRight, ChevronLeft, RefreshCw } from 'lucide-react';
 import './index.css';
@@ -108,18 +108,30 @@ function App() {
   const isRemoteSyncRef = useRef<{ contest: boolean; users: boolean }>({ contest: false, users: false });
   const handleBetRef = useRef<((userId: string, amount: number, outcomeId: string) => void) | null>(null);
 
-  // Auto-persist Contest & Users to localStorage (skip broadcast if just received from remote)
+  // Auto-persist Contest & Users to localStorage (skip broadcast if matching remote or already saved)
   useEffect(() => {
+    const json = JSON.stringify(contest);
+    if (json === storageService.getLastSavedContestJson()) {
+      isRemoteSyncRef.current.contest = false;
+      return;
+    }
     if (isRemoteSyncRef.current.contest) {
       isRemoteSyncRef.current.contest = false;
+      storageService.recordContestJson(json);
       return;
     }
     storageService.saveContest(contest);
   }, [contest]);
 
   useEffect(() => {
+    const json = JSON.stringify(users);
+    if (json === storageService.getLastSavedUsersJson()) {
+      isRemoteSyncRef.current.users = false;
+      return;
+    }
     if (isRemoteSyncRef.current.users) {
       isRemoteSyncRef.current.users = false;
+      storageService.recordUsersJson(json);
       return;
     }
     storageService.saveUsers(users);
@@ -705,11 +717,13 @@ function App() {
       // 1. Initial State Hydration / Live Broadcaster Snapshot Sync
       if ((data.type === 'INITIAL_STATE' || data.type === 'STATE_SNAPSHOT') && data.payload) {
         if (data.payload.contest) {
+          storageService.markRemoteContestSaved(data.payload.contest);
           isRemoteSyncRef.current.contest = true;
           contestRef.current = data.payload.contest;
           setContest(data.payload.contest);
         }
         if (data.payload.users) {
+          storageService.markRemoteUsersSaved(data.payload.users);
           isRemoteSyncRef.current.users = true;
           usersRef.current = data.payload.users;
           setUsers(data.payload.users);
@@ -739,20 +753,20 @@ function App() {
         if (data.payload.channel && data.payload.autoConnect) {
           twitchChatService.connect();
         }
-      } else if (data.type === 'CONTEST_UPDATED') {
-        setContest(prev => {
-          if (JSON.stringify(prev) === JSON.stringify(data.payload)) return prev;
-          isRemoteSyncRef.current.contest = true;
-          contestRef.current = data.payload;
-          return data.payload;
-        });
-      } else if (data.type === 'USERS_UPDATED') {
-        setUsers(prev => {
-          if (JSON.stringify(prev) === JSON.stringify(data.payload)) return prev;
-          isRemoteSyncRef.current.users = true;
-          usersRef.current = data.payload;
-          return data.payload;
-        });
+      } else if (data.type === 'CONTEST_UPDATED' && data.payload) {
+        const incomingJson = JSON.stringify(data.payload);
+        if (incomingJson === storageService.getLastSavedContestJson()) return;
+        storageService.markRemoteContestSaved(data.payload);
+        isRemoteSyncRef.current.contest = true;
+        contestRef.current = data.payload;
+        setContest(data.payload);
+      } else if (data.type === 'USERS_UPDATED' && data.payload) {
+        const incomingJson = JSON.stringify(data.payload);
+        if (incomingJson === storageService.getLastSavedUsersJson()) return;
+        storageService.markRemoteUsersSaved(data.payload);
+        isRemoteSyncRef.current.users = true;
+        usersRef.current = data.payload;
+        setUsers(data.payload);
       } else if (data.type === 'ACTIVE_STYLE_UPDATED' && data.payload?.style) {
         setActiveStyle(data.payload.style);
         styleService.setActiveStyle(data.payload.style);
@@ -822,8 +836,14 @@ function App() {
         // ONLY authoritative Broadcaster dashboard processes viewer bet deductions
         if (uiMode !== 'full') return;
 
-        const { userId, userName, userConfig, outcomeId, amount } = data.payload;
+        const { betId, userId, userName, userConfig, outcomeId, amount } = data.payload;
         if (!outcomeId || !amount || amount <= 0) return;
+
+        // Atomic deduplication: exactly one broadcaster instance claims and processes this bet request
+        const effectiveBetId = betId || data.msgId || `${userId}_${outcomeId}_${amount}_${data.timestamp || Date.now()}`;
+        if (!claimBetProcessing(effectiveBetId)) {
+          return;
+        }
 
         // Security & Moderation: Sanitize viewer token emoji
         const rawConfig = userConfig || data.payload.tokenConfig;
@@ -865,7 +885,12 @@ function App() {
         // ONLY authoritative Broadcaster dashboard updates user roster config
         if (uiMode !== 'full') return;
 
-        const { userId, userName, config } = data.payload;
+        const { updateId, userId, userName, config } = data.payload;
+        const effectiveUpdateId = updateId || data.msgId || `${userId}_${data.timestamp || Date.now()}`;
+        if (!claimTokenUpdateProcessing(effectiveUpdateId)) {
+          return;
+        }
+
         const curUsers = usersRef.current;
         const targetIndex = curUsers.findIndex(u => u.id === userId || (userName && u.name.toLowerCase() === userName.toLowerCase()));
         if (targetIndex !== -1 && config) {
@@ -1035,7 +1060,7 @@ function App() {
         totalPool: nextPool,
         outcomes: withOdds,
         bets: [
-          ...prevContest.bets,
+          ...prevContest.bets.slice(-199),
           {
             id: `b_${Date.now()}_${Math.random()}`,
             userId: user.id,

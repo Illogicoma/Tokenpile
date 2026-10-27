@@ -25,7 +25,11 @@ import {
   Coins,
   Plus,
   Trash2,
-  RotateCcw
+  RotateCcw,
+  Lock,
+  Unlock,
+  ShieldCheck,
+  Percent
 } from 'lucide-react';
 import type {
   UserTokenConfig,
@@ -121,6 +125,11 @@ export const SettingsModal = ({
   const [testBetSent, setTestBetSent] = useState(false);
   const [testJoinSent, setTestJoinSent] = useState(false);
   const [testLeaveSent, setTestLeaveSent] = useState(false);
+  const [testLockSent, setTestLockSent] = useState(false);
+  const [testOpenSent, setTestOpenSent] = useState(false);
+  const [testResetSent, setTestResetSent] = useState(false);
+  const [testGiveSent, setTestGiveSent] = useState(false);
+  const [testOddsSent, setTestOddsSent] = useState(false);
   const [isMuted, setIsMuted] = useState(soundEffects.getMuted());
   const [volume, setVolume] = useState(soundEffects.getVolume());
   const [tiers, setTiers] = useState<TierConfig[]>(() => tokenTiers || storageService.getTokenTiers());
@@ -331,6 +340,46 @@ export const SettingsModal = ({
     setTestLeaveSent(true);
     soundEffects.playCashout();
     setTimeout(() => setTestLeaveSent(false), 3000);
+  };
+
+  const handleSendTestLock = () => {
+    twitchChatService.saveConfig(twitchConfig);
+    twitchChatService.simulateIncomingAdmin('lock');
+    setTestLockSent(true);
+    soundEffects.playTokenClink();
+    setTimeout(() => setTestLockSent(false), 3000);
+  };
+
+  const handleSendTestOpen = () => {
+    twitchChatService.saveConfig(twitchConfig);
+    twitchChatService.simulateIncomingAdmin('open');
+    setTestOpenSent(true);
+    soundEffects.playTokenClink();
+    setTimeout(() => setTestOpenSent(false), 3000);
+  };
+
+  const handleSendTestReset = () => {
+    twitchChatService.saveConfig(twitchConfig);
+    twitchChatService.simulateIncomingAdmin('reset');
+    setTestResetSent(true);
+    soundEffects.playTokenClink();
+    setTimeout(() => setTestResetSent(false), 3000);
+  };
+
+  const handleSendTestGive = () => {
+    twitchChatService.saveConfig(twitchConfig);
+    twitchChatService.simulateIncomingAdmin('give', 'TwitchTester', 1000);
+    setTestGiveSent(true);
+    soundEffects.playCashout();
+    setTimeout(() => setTestGiveSent(false), 3000);
+  };
+
+  const handleSendTestOdds = () => {
+    twitchChatService.saveConfig(twitchConfig);
+    twitchChatService.simulateIncomingAdmin('odds', undefined, undefined, '1', 3.5);
+    setTestOddsSent(true);
+    soundEffects.playTokenClink();
+    setTimeout(() => setTestOddsSent(false), 3000);
   };
 
   const handleToggleMute = () => {
@@ -661,6 +710,177 @@ export const SettingsModal = ({
                         >
                           <UserMinus size={12} color="#94a3b8" />
                           <span>{testLeaveSent ? '✓ Left!' : 'Test Leave'}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Editable Broadcaster & Moderator Commands */}
+                <div style={{ marginTop: '0.9rem', borderTop: '1px dashed var(--well-border, rgba(125, 107, 66, 0.22))', paddingTop: '0.8rem' }}>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary, #5A4A28)', marginBottom: '0.6rem', fontFamily: "'Merge One', system-ui, sans-serif", display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <ShieldCheck size={14} color="#10b981" />
+                    <span>Broadcaster &amp; Moderator Commands</span>
+                    <span style={{ fontSize: '0.68rem', fontWeight: 500, color: 'var(--text-muted, #8E7D53)' }}>(Requires Broadcaster or Mod badge)</span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                    {/* 1. Lock Command */}
+                    <div className="twitch-command-card">
+                      <div style={{ width: '130px', flexShrink: 0 }}>
+                        <label className="section-label" style={{ marginBottom: '0.2rem' }}>Lock Bets</label>
+                        <input
+                          type="text"
+                          value={twitchConfig.lockCommand ?? '!lock'}
+                          onChange={e => setTwitchConfig(prev => ({ ...prev, lockCommand: e.target.value }))}
+                          className="cyber-input"
+                          placeholder="!lock"
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+
+                      <div style={{ flex: 1, fontSize: '0.75rem', color: 'var(--text-muted, #8E7D53)' }}>
+                        <div>Usage: <code>{twitchConfig.lockCommand || '!lock'}</code></div>
+                        <div style={{ fontSize: '0.7rem', marginTop: '0.15rem' }}>Locks betting before a race starts so no more bets can enter.</div>
+                      </div>
+
+                      <div style={{ flexShrink: 0 }}>
+                        <button
+                          type="button"
+                          className="cyber-btn-secondary mini-btn"
+                          onClick={handleSendTestLock}
+                          style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                        >
+                          <Lock size={12} color="#f59e0b" />
+                          <span>{testLockSent ? '✓ Locked!' : 'Test Lock'}</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 2. Open Command */}
+                    <div className="twitch-command-card">
+                      <div style={{ width: '130px', flexShrink: 0 }}>
+                        <label className="section-label" style={{ marginBottom: '0.2rem' }}>Open Bets</label>
+                        <input
+                          type="text"
+                          value={twitchConfig.openCommand ?? '!open'}
+                          onChange={e => setTwitchConfig(prev => ({ ...prev, openCommand: e.target.value }))}
+                          className="cyber-input"
+                          placeholder="!open"
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+
+                      <div style={{ flex: 1, fontSize: '0.75rem', color: 'var(--text-muted, #8E7D53)' }}>
+                        <div>Usage: <code>{twitchConfig.openCommand || '!open'}</code></div>
+                        <div style={{ fontSize: '0.7rem', marginTop: '0.15rem' }}>Reopens betting for the active race.</div>
+                      </div>
+
+                      <div style={{ flexShrink: 0 }}>
+                        <button
+                          type="button"
+                          className="cyber-btn-secondary mini-btn"
+                          onClick={handleSendTestOpen}
+                          style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                        >
+                          <Unlock size={12} color="#10b981" />
+                          <span>{testOpenSent ? '✓ Opened!' : 'Test Open'}</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 3. Reset Command */}
+                    <div className="twitch-command-card">
+                      <div style={{ width: '130px', flexShrink: 0 }}>
+                        <label className="section-label" style={{ marginBottom: '0.2rem' }}>Reset Race</label>
+                        <input
+                          type="text"
+                          value={twitchConfig.resetCommand ?? '!reset'}
+                          onChange={e => setTwitchConfig(prev => ({ ...prev, resetCommand: e.target.value }))}
+                          className="cyber-input"
+                          placeholder="!reset"
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+
+                      <div style={{ flex: 1, fontSize: '0.75rem', color: 'var(--text-muted, #8E7D53)' }}>
+                        <div>Usage: <code>{twitchConfig.resetCommand || '!reset'}</code></div>
+                        <div style={{ fontSize: '0.7rem', marginTop: '0.15rem' }}>Resets race pools, clears bets, and files entrants back into starting positions.</div>
+                      </div>
+
+                      <div style={{ flexShrink: 0 }}>
+                        <button
+                          type="button"
+                          className="cyber-btn-secondary mini-btn"
+                          onClick={handleSendTestReset}
+                          style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                        >
+                          <RotateCcw size={12} color="#ec4899" />
+                          <span>{testResetSent ? '✓ Reset!' : 'Test Reset'}</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 4. Give Points Command */}
+                    <div className="twitch-command-card">
+                      <div style={{ width: '130px', flexShrink: 0 }}>
+                        <label className="section-label" style={{ marginBottom: '0.2rem' }}>Give Points</label>
+                        <input
+                          type="text"
+                          value={twitchConfig.giveCommand ?? '!give'}
+                          onChange={e => setTwitchConfig(prev => ({ ...prev, giveCommand: e.target.value }))}
+                          className="cyber-input"
+                          placeholder="!give"
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+
+                      <div style={{ flex: 1, fontSize: '0.75rem', color: 'var(--text-muted, #8E7D53)' }}>
+                        <div>Usage: <code>{twitchConfig.giveCommand || '!give'} &lt;@viewer&gt; &lt;amount&gt;</code></div>
+                        <div style={{ fontSize: '0.7rem', marginTop: '0.15rem' }}>Awards virtual points directly to a viewer (e.g. <code>{twitchConfig.giveCommand || '!give'} @viewer 1000</code>).</div>
+                      </div>
+
+                      <div style={{ flexShrink: 0 }}>
+                        <button
+                          type="button"
+                          className="cyber-btn-secondary mini-btn"
+                          onClick={handleSendTestGive}
+                          style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                        >
+                          <Coins size={12} color="#eab308" />
+                          <span>{testGiveSent ? '✓ Given!' : 'Test Give'}</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 5. Set Odds Command */}
+                    <div className="twitch-command-card">
+                      <div style={{ width: '130px', flexShrink: 0 }}>
+                        <label className="section-label" style={{ marginBottom: '0.2rem' }}>Set Odds</label>
+                        <input
+                          type="text"
+                          value={twitchConfig.oddsCommand ?? '!odds'}
+                          onChange={e => setTwitchConfig(prev => ({ ...prev, oddsCommand: e.target.value }))}
+                          className="cyber-input"
+                          placeholder="!odds"
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+
+                      <div style={{ flex: 1, fontSize: '0.75rem', color: 'var(--text-muted, #8E7D53)' }}>
+                        <div>Usage: <code>{twitchConfig.oddsCommand || '!odds'} &lt;entrant # or name&gt; &lt;multiplier&gt;</code></div>
+                        <div style={{ fontSize: '0.7rem', marginTop: '0.15rem' }}>Sets manual multiplier odds for an entrant (e.g. <code>{twitchConfig.oddsCommand || '!odds'} 1 2.5</code>).</div>
+                      </div>
+
+                      <div style={{ flexShrink: 0 }}>
+                        <button
+                          type="button"
+                          className="cyber-btn-secondary mini-btn"
+                          onClick={handleSendTestOdds}
+                          style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                        >
+                          <Percent size={12} color="#6366f1" />
+                          <span>{testOddsSent ? '✓ Set Odds!' : 'Test Odds'}</span>
                         </button>
                       </div>
                     </div>

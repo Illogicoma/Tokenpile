@@ -282,25 +282,37 @@ export class TwitchChatService {
 
     // 1. Broadcaster & Moderator Administrative Commands (!lock, !open, !reset, !give, !odds)
     const lowerChat = chatText.toLowerCase();
-    if (lowerChat === '!lock' || lowerChat === '!closelock' || lowerChat === '!closebets') {
+
+    // Lock Command
+    const lockCmd = this.config.lockCommand || '!lock';
+    if (this.isCommandMatch(chatText, lockCmd, '!lock') || lowerChat === '!closelock' || lowerChat === '!closebets') {
       if (isMod) {
         this.emitAdminCommand({ command: 'lock', username, displayName, isBroadcaster, isMod, rawMessage: chatText });
       }
       return;
     }
-    if (lowerChat === '!open' || lowerChat === '!unlock' || lowerChat === '!reopen') {
+
+    // Open Command
+    const openCmd = this.config.openCommand || '!open';
+    if (this.isCommandMatch(chatText, openCmd, '!open') || lowerChat === '!unlock' || lowerChat === '!reopen') {
       if (isMod) {
         this.emitAdminCommand({ command: 'open', username, displayName, isBroadcaster, isMod, rawMessage: chatText });
       }
       return;
     }
-    if (lowerChat === '!reset' || lowerChat === '!newrace') {
+
+    // Reset Command
+    const resetCmd = this.config.resetCommand || '!reset';
+    if (this.isCommandMatch(chatText, resetCmd, '!reset') || lowerChat === '!newrace') {
       if (isMod) {
         this.emitAdminCommand({ command: 'reset', username, displayName, isBroadcaster, isMod, rawMessage: chatText });
       }
       return;
     }
-    if (lowerChat.startsWith('!give ') || lowerChat.startsWith('!addpoints ')) {
+
+    // Give Points Command
+    const giveCmd = this.config.giveCommand || '!give';
+    if (this.isCommandPrefix(chatText, giveCmd, '!give') || lowerChat.startsWith('!addpoints ')) {
       // Security: Viewers cannot run !give or !addpoints
       if (isMod) {
         const parts = chatText.split(/\s+/).filter(Boolean);
@@ -314,7 +326,10 @@ export class TwitchChatService {
       }
       return;
     }
-    if (lowerChat.startsWith('!odds ')) {
+
+    // Set Odds Command
+    const oddsCmd = this.config.oddsCommand || '!odds';
+    if (this.isCommandPrefix(chatText, oddsCmd, '!odds')) {
       if (isMod) {
         const parts = chatText.split(/\s+/).filter(Boolean);
         if (parts.length >= 3) {
@@ -417,6 +432,27 @@ export class TwitchChatService {
 
     const firstWord = trimmedMsg.split(/\s+/)[0];
     return prefixes.some(p => firstWord === p || trimmedMsg === p || trimmedMsg.startsWith(p + ' '));
+  }
+
+  /**
+   * Helper to determine if the first word of a chat message matches a command prefix
+   */
+  public isCommandPrefix(message: string, commandConfig?: string, defaultCmd: string = ''): boolean {
+    const rawCmd = (commandConfig || defaultCmd).trim().toLowerCase();
+    if (!rawCmd) return false;
+
+    const trimmedMsg = message.trim().toLowerCase();
+    if (!trimmedMsg) return false;
+
+    const prefixes = [rawCmd];
+    if (rawCmd.startsWith('!')) {
+      prefixes.push(rawCmd.substring(1));
+    } else {
+      prefixes.push('!' + rawCmd);
+    }
+
+    const firstWord = trimmedMsg.split(/\s+/)[0];
+    return prefixes.includes(firstWord);
   }
 
   /**
@@ -634,6 +670,40 @@ export class TwitchChatService {
         console.error('Error in simulated leave listener:', e);
       }
     }
+  }
+
+  /**
+   * Helper to simulate admin commands directly for testing from settings or debug tools
+   */
+  public simulateIncomingAdmin(
+    command: 'lock' | 'open' | 'reset' | 'give' | 'odds',
+    targetUser?: string,
+    amount?: number,
+    targetOutcome?: string,
+    oddsValue?: number,
+    username: string = 'StreamerMod',
+    displayName: string = 'StreamerMod'
+  ): void {
+    const rawCmd = command === 'lock' ? (this.config.lockCommand || '!lock')
+      : command === 'open' ? (this.config.openCommand || '!open')
+      : command === 'reset' ? (this.config.resetCommand || '!reset')
+      : command === 'give' ? `${this.config.giveCommand || '!give'} @${targetUser || 'TwitchTester'} ${amount || 1000}`
+      : `${this.config.oddsCommand || '!odds'} #${targetOutcome || '1'} ${oddsValue || 3.5}`;
+
+    const cmd: ParsedAdminCommand = {
+      command,
+      targetUser,
+      amount,
+      targetOutcome,
+      oddsValue,
+      username: username.toLowerCase(),
+      displayName,
+      isBroadcaster: true,
+      isMod: true,
+      rawMessage: rawCmd
+    };
+
+    this.emitAdminCommand(cmd);
   }
 }
 

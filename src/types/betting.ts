@@ -134,6 +134,11 @@ export interface TwitchChatConfig {
   botPrefix: string; // default "!bet"
   joinCommand?: string; // default "!join"
   leaveCommand?: string; // default "!leave"
+  lockCommand?: string; // default "!lock"
+  openCommand?: string; // default "!open"
+  resetCommand?: string; // default "!reset"
+  giveCommand?: string; // default "!give"
+  oddsCommand?: string; // default "!odds"
   startingTokens: number; // default 50000
   autoConnect: boolean;
 }

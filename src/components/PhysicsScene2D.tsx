@@ -72,6 +72,12 @@ function getOrCreateTokenSprite(emoji: string, tier: string, tint: string, radiu
     return spriteCache.get(key)!;
   }
 
+  // Prevent unbounded cache growth
+  if (spriteCache.size > 300) {
+    const oldestKey = spriteCache.keys().next().value;
+    if (oldestKey) spriteCache.delete(oldestKey);
+  }
+
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const padding = 8;
   const size = Math.ceil((radius + padding) * 2);
@@ -257,6 +263,47 @@ export const PhysicsScene2D = ({
 
   const updateWallsRef = useRef<(() => void) | null>(null);
 
+  // Anti-Cavitation: Target-wake resting tokens directly above removed/merged coins so they fall naturally into voids
+  const wakeBodiesAbove = (removed: Token2DBody[]) => {
+    const engine = engineRef.current;
+    if (!engine || removed.length === 0) return;
+    const world = engine.world;
+    const allBodies = Composite.allBodies(world) as Token2DBody[];
+
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    for (let i = 0; i < removed.length; i++) {
+      const b = removed[i];
+      const r = b.tokenData?.radius ?? 14;
+      if (b.position.x - r < minX) minX = b.position.x - r;
+      if (b.position.x + r > maxX) maxX = b.position.x + r;
+      if (b.position.y + r > maxY) maxY = b.position.y + r;
+    }
+
+    const margin = 32;
+    minX -= margin;
+    maxX += margin;
+
+    for (let i = 0; i < allBodies.length; i++) {
+      const b = allBodies[i];
+      if (!b.tokenData || b.isSensor) continue;
+
+      if (b.position.x >= minX && b.position.x <= maxX && b.position.y < maxY) {
+        if (b.isStatic) Body.setStatic(b, false);
+        if (b.isSleeping) Sleeping.set(b, false);
+        Body.setVelocity(b, {
+          x: b.velocity.x * 0.5 + (Math.random() - 0.5) * 0.4,
+          y: Math.max(b.velocity.y, 0.8 + Math.random() * 0.6)
+        });
+      }
+    }
+  };
+
+  const wakeBodiesAboveRef = useRef(wakeBodiesAbove);
+  wakeBodiesAboveRef.current = wakeBodiesAbove;
+
 
 
   // Initialize Matter.js Engine & World once
@@ -329,11 +376,11 @@ export const PhysicsScene2D = ({
         const sumVal = valA + valB;
         const sameTier = bodyA.tokenData.tier === bodyB.tokenData.tier;
         const reachesNewTier = (valA < 100 && sumVal >= 100) ||
-                               (valA < 500 && sumVal >= 500) ||
-                               (valA < 1000 && sumVal >= 1000) ||
-                               (valA < 5000 && sumVal >= 5000) ||
-                               (valA < 10000 && sumVal >= 10000) ||
-                               (valA < 25000 && sumVal >= 25000);
+          (valA < 500 && sumVal >= 500) ||
+          (valA < 1000 && sumVal >= 1000) ||
+          (valA < 5000 && sumVal >= 5000) ||
+          (valA < 10000 && sumVal >= 10000) ||
+          (valA < 25000 && sumVal >= 25000);
 
         if (sameTier || reachesNewTier) {
           mergedThisStep.add(bodyA);
@@ -368,6 +415,7 @@ export const PhysicsScene2D = ({
         const midY = (bodyA.position.y + bodyB.position.y) / 2;
 
         Composite.remove(engine.world, [bodyA, bodyB]);
+        wakeBodiesAboveRef.current?.([bodyA, bodyB]);
 
         const mergedBody = Bodies.circle(midX, midY - 2, tierInfo.radius2D, {
           restitution: 0.14,
@@ -387,8 +435,8 @@ export const PhysicsScene2D = ({
           entrantColor: leadEntrantColor,
         };
 
-        const badgeText = tierInfo.tier === 'base' && totalVal > 1 
-          ? `${Math.round(totalVal)}pt` 
+        const badgeText = tierInfo.tier === 'base' && totalVal > 1
+          ? `${Math.round(totalVal)}pt`
           : undefined;
 
         mergedBody.spriteCanvas = getOrCreateTokenSprite(
@@ -443,26 +491,26 @@ export const PhysicsScene2D = ({
 
       const wallThickness = 40;
       const floor = Bodies.rectangle(
-        geom.x + geom.width / 2, 
-        geom.y + geom.height + wallThickness / 2, 
-        geom.width + wallThickness * 2, 
-        wallThickness, 
+        geom.x + geom.width / 2,
+        geom.y + geom.height + wallThickness / 2,
+        geom.width + wallThickness * 2,
+        wallThickness,
         { isStatic: true, friction: 0.85, restitution: 0.15 }
       );
 
       const leftWall = Bodies.rectangle(
-        geom.x - wallThickness / 2, 
-        geom.y + geom.height / 2, 
-        wallThickness, 
-        geom.height + 140, 
+        geom.x - wallThickness / 2,
+        geom.y + geom.height / 2,
+        wallThickness,
+        geom.height + 140,
         { isStatic: true, friction: 0.6, restitution: 0.2 }
       );
 
       const rightWall = Bodies.rectangle(
-        geom.x + geom.width + wallThickness / 2, 
-        geom.y + geom.height / 2, 
-        wallThickness, 
-        geom.height + 140, 
+        geom.x + geom.width + wallThickness / 2,
+        geom.y + geom.height / 2,
+        wallThickness,
+        geom.height + 140,
         { isStatic: true, friction: 0.6, restitution: 0.2 }
       );
 
@@ -686,17 +734,14 @@ export const PhysicsScene2D = ({
             Sleeping.set(tokenBody, true);
           }
 
-          // Only freeze into static bedrock if truly near the bottom of the bucket (never floating in mid-air!)
-          const floorLandingY = geom.y + geom.height - 160;
+          // Keep tokens dynamic (sleeping only) so gravity acts naturally whenever supports underneath vanish
+          if (tokenBody.isStatic) {
+            Body.setStatic(tokenBody, false);
+          }
+
           if (tokenBody.isSleeping) {
-            if (!tokenBody.isStatic && tokenBody.position.y >= floorLandingY) {
-              Body.setStatic(tokenBody, true);
-            }
             sleepingBodies.push(tokenBody);
           } else {
-            if (tokenBody.isStatic) {
-              Body.setStatic(tokenBody, false);
-            }
             activeBodies.push(tokenBody);
           }
         } else {
@@ -733,10 +778,10 @@ export const PhysicsScene2D = ({
           staticCtx.translate(x, y);
           staticCtx.rotate(b.angle);
           staticCtx.drawImage(
-            b.spriteCanvas!, 
-            -halfSize, 
-            -halfSize, 
-            halfSize * 2, 
+            b.spriteCanvas!,
+            -halfSize,
+            -halfSize,
+            halfSize * 2,
             halfSize * 2
           );
           staticCtx.restore();
@@ -758,10 +803,10 @@ export const PhysicsScene2D = ({
         ctx.translate(x, y);
         ctx.rotate(b.angle);
         ctx.drawImage(
-          b.spriteCanvas!, 
-          -halfSize, 
-          -halfSize, 
-          halfSize * 2, 
+          b.spriteCanvas!,
+          -halfSize,
+          -halfSize,
+          halfSize * 2,
           halfSize * 2
         );
         ctx.restore();
@@ -793,9 +838,9 @@ export const PhysicsScene2D = ({
     // Auto-merge user tokens if higher tier threshold was crossed (e.g. 99 base tokens + 1 more -> 1 silver token!)
     if (dropEvent.isTierMerge) {
       const allBodies = Composite.allBodies(world) as Token2DBody[];
-      const existingUserTokens = allBodies.filter(b => 
-        b.tokenData && 
-        b.tokenData.userId === dropEvent.userId && 
+      const existingUserTokens = allBodies.filter(b =>
+        b.tokenData &&
+        b.tokenData.userId === dropEvent.userId &&
         b.tokenData.outcomeId === dropEvent.outcomeId
       );
 
@@ -930,7 +975,21 @@ export const PhysicsScene2D = ({
     }
 
     if (bodiesToAdd.length > 0) {
-      Composite.add(engineRef.current.world, bodiesToAdd);
+      const world = engineRef.current.world;
+      const maxBodies = bucketConfigRef.current?.maxArenaTokens ?? 2500;
+      const allBodies = Composite.allBodies(world) as Token2DBody[];
+      const tokenBodies = allBodies.filter(b => b.tokenData);
+      if (tokenBodies.length + bodiesToAdd.length > maxBodies) {
+        const overflow = (tokenBodies.length + bodiesToAdd.length) - maxBodies;
+        // Purge oldest sleeping / static bodies first to prevent runaway physics memory
+        const sleeping = tokenBodies.filter(b => b.isSleeping || b.isStatic);
+        const toRemove = sleeping.slice(0, overflow);
+        if (toRemove.length > 0) {
+          Composite.remove(world, toRemove);
+          wakeBodiesAbove(toRemove);
+        }
+      }
+      Composite.add(world, bodiesToAdd);
     }
   }, [dropEvent, isVisible]);
 
@@ -1014,6 +1073,7 @@ export const PhysicsScene2D = ({
               const leadUserId = cluster[0].tokenData?.userId;
 
               Composite.remove(world, cluster);
+              wakeBodiesAbove(cluster);
 
               const mergedBody = Bodies.circle(avgX, avgY - 2, tierInfo.radius2D, {
                 restitution: 0.14,
@@ -1033,8 +1093,8 @@ export const PhysicsScene2D = ({
                 entrantColor: leadEntrantColor,
               };
 
-              const badgeText = tierInfo.tier === 'base' && totalVal > 1 
-                ? `${Math.round(totalVal)}pt` 
+              const badgeText = tierInfo.tier === 'base' && totalVal > 1
+                ? `${Math.round(totalVal)}pt`
                 : (cluster.length > 2 ? `${cluster.length}x` : undefined);
 
               mergedBody.spriteCanvas = getOrCreateTokenSprite(
@@ -1055,6 +1115,80 @@ export const PhysicsScene2D = ({
 
     return () => clearInterval(interval);
   }, []);
+
+  // Periodic Anti-Cavitation Settle Governor (Runs every 1000ms)
+  // Rapidly scans resting tokens using column bins (<0.05ms) and gently wakes any ungrounded floating tokens
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const engine = engineRef.current;
+      if (!engine || !isVisible) return;
+      if (isBucketTrapdoorOpen || isWinnerBurst) return;
+
+      const geom = containerBoundsRef.current;
+      const floorY = geom.y + geom.height;
+      const world = engine.world;
+      const allBodies = Composite.allBodies(world) as Token2DBody[];
+      const tokenBodies = allBodies.filter(b => b.tokenData && !b.isSensor);
+
+      if (tokenBodies.length < 5) return;
+
+      const numCols = 24;
+      const colWidth = Math.max(1, geom.width / numCols);
+      const columns: Token2DBody[][] = Array.from({ length: numCols }, () => []);
+
+      for (let i = 0; i < tokenBodies.length; i++) {
+        const b = tokenBodies[i];
+        const colIdx = Math.max(0, Math.min(numCols - 1, Math.floor((b.position.x - geom.x) / colWidth)));
+        columns[colIdx].push(b);
+      }
+
+      for (let c = 0; c < numCols; c++) {
+        const col = columns[c];
+        for (let i = 0; i < col.length; i++) {
+          const b = col[i];
+          if (!b.isSleeping) continue;
+
+          const r = b.tokenData!.radius;
+          const bottomY = b.position.y + r;
+
+          // Resting directly on floor -> grounded
+          if (bottomY >= floorY - 14) continue;
+
+          let hasSupport = false;
+          const minCol = Math.max(0, c - 1);
+          const maxCol = Math.min(numCols - 1, c + 1);
+
+          for (let adj = minCol; adj <= maxCol && !hasSupport; adj++) {
+            const adjCol = columns[adj];
+            for (let j = 0; j < adjCol.length; j++) {
+              const other = adjCol[j];
+              if (other === b) continue;
+              const otherR = other.tokenData!.radius;
+              const dy = other.position.y - b.position.y;
+              if (dy > 0 && dy < (r + otherR) * 1.35) {
+                const dx = Math.abs(other.position.x - b.position.x);
+                if (dx < (r + otherR) * 0.95) {
+                  hasSupport = true;
+                  break;
+                }
+              }
+            }
+          }
+
+          if (!hasSupport) {
+            if (b.isStatic) Body.setStatic(b, false);
+            Sleeping.set(b, false);
+            Body.setVelocity(b, {
+              x: (Math.random() - 0.5) * 0.25,
+              y: 1.0 + Math.random() * 0.5
+            });
+          }
+        }
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isVisible, isBucketTrapdoorOpen, isWinnerBurst]);
 
   // Clear tokens when tokens are disabled entirely
   useEffect(() => {
@@ -1240,11 +1374,11 @@ export const PhysicsScene2D = ({
   }, [isWinnerBurst]);
 
   return (
-    <canvas 
-      ref={canvasRef} 
-      className="canvas-container canvas-2d" 
-      style={{ 
-        pointerEvents: 'none', 
+    <canvas
+      ref={canvasRef}
+      className="canvas-container canvas-2d"
+      style={{
+        pointerEvents: 'none',
         zIndex: 10,
         display: isVisible ? 'block' : 'none'
       }}

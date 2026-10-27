@@ -35,6 +35,91 @@ const syncChannel = typeof window !== 'undefined' && 'BroadcastChannel' in windo
 let lastSavedUsersJson = '';
 let lastSavedContestJson = '';
 
+// Cross-instance atomic bet lock & deduplication registry
+const processedBetIds = new Set<string>();
+const processedUpdateIds = new Set<string>();
+let lastCleanLocksTime = 0;
+
+function cleanOldLocks() {
+  const now = Date.now();
+  if (now - lastCleanLocksTime < 15000) return;
+  lastCleanLocksTime = now;
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && (k.startsWith('TokenPile_bet_lock_') || k.startsWith('TokenPile_tu_lock_'))) {
+        const val = localStorage.getItem(k);
+        if (val) {
+          const parts = val.split('_');
+          const ts = parseInt(parts[parts.length - 1], 10);
+          if (isNaN(ts) || now - ts > 60000) {
+            keysToRemove.push(k);
+          }
+        }
+      }
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+  } catch { }
+}
+
+export function claimBetProcessing(betId: string): boolean {
+  if (!betId) return false;
+  if (processedBetIds.has(betId)) return false;
+  processedBetIds.add(betId);
+  if (processedBetIds.size > 500) {
+    const oldest = processedBetIds.values().next().value;
+    if (oldest) processedBetIds.delete(oldest);
+  }
+
+  if (typeof window === 'undefined' || !window.localStorage) return true;
+
+  const lockKey = `TokenPile_bet_lock_${betId}`;
+  try {
+    const existing = localStorage.getItem(lockKey);
+    if (existing) {
+      return false;
+    }
+    const val = `${CLIENT_ID}_${Date.now()}`;
+    localStorage.setItem(lockKey, val);
+
+    // Double-check race condition
+    const check = localStorage.getItem(lockKey);
+    if (check && !check.startsWith(CLIENT_ID)) {
+      return false;
+    }
+    cleanOldLocks();
+    return true;
+  } catch {
+    return true;
+  }
+}
+
+export function claimTokenUpdateProcessing(updateId: string): boolean {
+  if (!updateId) return false;
+  if (processedUpdateIds.has(updateId)) return false;
+  processedUpdateIds.add(updateId);
+  if (processedUpdateIds.size > 500) {
+    const oldest = processedUpdateIds.values().next().value;
+    if (oldest) processedUpdateIds.delete(oldest);
+  }
+
+  if (typeof window === 'undefined' || !window.localStorage) return true;
+
+  const lockKey = `TokenPile_tu_lock_${updateId}`;
+  try {
+    const existing = localStorage.getItem(lockKey);
+    if (existing) return false;
+    localStorage.setItem(lockKey, `${CLIENT_ID}_${Date.now()}`);
+    const check = localStorage.getItem(lockKey);
+    if (check && !check.startsWith(CLIENT_ID)) return false;
+    cleanOldLocks();
+    return true;
+  } catch {
+    return true;
+  }
+}
+
 // Bounded deduplication registry to discard duplicate events delivered over both BroadcastChannel and SSE
 const processedMsgIds = new Set<string>();
 function isDuplicateMessage(msgId?: string): boolean {
@@ -140,6 +225,12 @@ function ensureSSEConnection() {
           dispatchToCallbacks(data);
         }
       } catch { }
+    };
+    sharedSSE.onerror = () => {
+      if (sharedSSE && sharedSSE.readyState === EventSource.CLOSED) {
+        sharedSSE.close();
+        sharedSSE = null;
+      }
     };
   } catch { }
 }
@@ -916,6 +1007,22 @@ export const storageService = {
     }
   },
 
+  getLastSavedContestJson(): string {
+    return lastSavedContestJson;
+  },
+
+  recordContestJson(json: string): void {
+    lastSavedContestJson = json;
+  },
+
+  markRemoteContestSaved(contest: Contest): void {
+    try {
+      const json = JSON.stringify(contest);
+      lastSavedContestJson = json;
+      localStorage.setItem(CONTEST_STORAGE_KEY, json);
+    } catch { }
+  },
+
   saveContest(contest: Contest): void {
     try {
       const json = JSON.stringify(contest);
@@ -938,6 +1045,22 @@ export const storageService = {
     }
   },
 
+  getLastSavedUsersJson(): string {
+    return lastSavedUsersJson;
+  },
+
+  recordUsersJson(json: string): void {
+    lastSavedUsersJson = json;
+  },
+
+  markRemoteUsersSaved(users: UserRosterItem[]): void {
+    try {
+      const json = JSON.stringify(users);
+      lastSavedUsersJson = json;
+      localStorage.setItem(USERS_ROSTER_KEY, json);
+    } catch { }
+  },
+
   saveUsers(users: UserRosterItem[]): void {
     try {
       const json = JSON.stringify(users);
@@ -956,6 +1079,11 @@ export const storageService = {
       botPrefix: '!bet',
       joinCommand: '!join',
       leaveCommand: '!leave',
+      lockCommand: '!lock',
+      openCommand: '!open',
+      resetCommand: '!reset',
+      giveCommand: '!give',
+      oddsCommand: '!odds',
       startingTokens: 50000,
       autoConnect: true,
     };
