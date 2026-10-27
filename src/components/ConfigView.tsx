@@ -118,7 +118,6 @@ export const ConfigView: React.FC<ConfigViewProps> = ({ contest, onExitConfig })
   const baseUrl = typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : 'https://localhost:5173/';
   const panelUrl = `${baseUrl}?mode=panel`;
   const viewerUrl = `${baseUrl}?mode=viewer`;
-  const dashboardUrl = `${baseUrl}?mode=dashboard`;
 
   return (
     <div className="config-view-container" style={{
@@ -618,7 +617,7 @@ export const ConfigView: React.FC<ConfigViewProps> = ({ contest, onExitConfig })
               </button>
             </div>
 
-            {/* Live Dashboard View */}
+            {/* OBS Custom Browser Dock URL */}
             <div style={{
               backgroundColor: 'var(--card-bg-elevated, #FDFCF7)',
               border: '1.5px solid var(--card-border, rgba(125, 107, 66, 0.22))',
@@ -631,12 +630,12 @@ export const ConfigView: React.FC<ConfigViewProps> = ({ contest, onExitConfig })
               boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
             }}>
               <div>
-                <div style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-title, #7D6B42)' }}>Live Dashboard Path (Broadcaster Stream Manager Dock)</div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted, #8E7D53)', fontFamily: 'var(--font-family-mono, monospace)' }}>index.html?mode=dashboard</div>
+                <div style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-title, #7D6B42)' }}>OBS Custom Browser Dock (Control GM Mode inside OBS)</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted, #8E7D53)', fontFamily: 'var(--font-family-mono, monospace)' }}>index.html</div>
               </div>
               <button
                 type="button"
-                onClick={() => handleCopyUrl('dashboard', dashboardUrl)}
+                onClick={() => handleCopyUrl('dashboard', `${baseUrl}`)}
                 style={{
                   backgroundColor: copiedKey === 'dashboard' ? '#3cae02' : 'var(--well-bg, rgba(217, 217, 217, 0.52))',
                   color: copiedKey === 'dashboard' ? '#ffffff' : 'var(--text-primary, #5A4A28)',
@@ -653,7 +652,7 @@ export const ConfigView: React.FC<ConfigViewProps> = ({ contest, onExitConfig })
                 }}
               >
                 {copiedKey === 'dashboard' ? <Check size={12} /> : <Copy size={12} />}
-                <span>{copiedKey === 'dashboard' ? 'Copied Full URL' : 'Copy Full URL'}</span>
+                <span>{copiedKey === 'dashboard' ? 'Copied Full URL' : 'Copy Dock URL'}</span>
               </button>
             </div>
           </div>

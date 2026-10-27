@@ -794,8 +794,16 @@ function App() {
         if (incomingJson === storageService.getLastSavedContestJson()) return;
         storageService.markRemoteContestSaved(data.payload);
         isRemoteSyncRef.current.contest = true;
-        contestRef.current = data.payload;
-        setContest(data.payload);
+        setContest(prev => {
+          const merged: Contest = {
+            ...prev,
+            ...data.payload,
+            bets: (data.payload.bets && Array.isArray(data.payload.bets) && data.payload.bets.length > 0) ? data.payload.bets : (prev.bets || []),
+            outcomes: data.payload.outcomes || prev.outcomes || []
+          };
+          contestRef.current = merged;
+          return merged;
+        });
       } else if (data.type === 'USERS_UPDATED' && data.payload) {
         const incomingJson = JSON.stringify(data.payload);
         if (incomingJson === storageService.getLastSavedUsersJson()) return;

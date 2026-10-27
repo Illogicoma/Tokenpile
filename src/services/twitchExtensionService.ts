@@ -92,6 +92,7 @@ class TwitchExtensionService {
   private jwtPayload: TwitchJWTPayload | null = null;
   private context: TwitchExtContext | null = null;
   private isInitialized = false;
+  private hasSubscribedPubSub = false;
 
   private authListeners: Array<(auth: TwitchExtAuth, isBroadcaster: boolean) => void> = [];
   private contextListeners: Array<(ctx: TwitchExtContext) => void> = [];
@@ -404,6 +405,10 @@ class TwitchExtensionService {
       winningOutcomeId: contest.winningOutcomeId,
       podiumOutcomeIds: contest.podiumOutcomeIds,
       oddsMode: contest.oddsMode,
+      minBet: contest.minBet || 5,
+      maxBet: contest.maxBet || 50000,
+      createdAt: contest.createdAt || Date.now(),
+      bets: [],
       outcomes: (contest.outcomes || []).map(o => ({
         id: o.id,
         name: o.name,
@@ -421,11 +426,14 @@ class TwitchExtensionService {
   }
 
   /**
-   * Sets up PubSub listeners on the broadcast and whisper channels
+   * Sets up PubSub listeners on the broadcast channel
    */
   private setupPubSubListeners(): void {
+    if (this.hasSubscribedPubSub) return;
     const ext = window.Twitch?.ext;
     if (!ext || !ext.listen) return;
+
+    this.hasSubscribedPubSub = true;
 
     const handleMessage = (_target: string, _contentType: string, rawMessage: string) => {
       try {
@@ -445,14 +453,8 @@ class TwitchExtensionService {
     };
 
     try {
-      // 1. Listen for global broadcasts to all viewers on this channel
+      // Listen for global broadcasts to all viewers on this channel
       ext.listen('broadcast', handleMessage);
-
-      // 2. If broadcaster or user has ID, listen for whispers targeted to them
-      const myId = this.getUserId();
-      if (myId) {
-        ext.listen(`whisper-${myId}`, handleMessage);
-      }
     } catch (e) {
       console.warn('[TwitchExt] Could not attach PubSub listeners:', e);
     }

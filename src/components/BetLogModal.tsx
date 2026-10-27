@@ -56,7 +56,8 @@ export const BetLogModal: React.FC<BetLogModalProps> = ({
 
   // All bets from contest, sorted latest first
   const allBets = useMemo(() => {
-    return [...contest.bets].reverse();
+    const bets = contest.bets || [];
+    return [...bets].reverse();
   }, [contest.bets]);
 
   // Compute winning outcome IDs
@@ -72,12 +73,14 @@ export const BetLogModal: React.FC<BetLogModalProps> = ({
 
   // Summary KPIs
   const totalVolume = useMemo(() => {
-    return contest.bets.reduce((sum, b) => sum + b.amount, 0);
+    const bets = contest.bets || [];
+    return bets.reduce((sum, b) => sum + b.amount, 0);
   }, [contest.bets]);
 
   const uniqueBettorCount = useMemo(() => {
     const ids = new Set<string>();
-    contest.bets.forEach(b => {
+    const bets = contest.bets || [];
+    bets.forEach(b => {
       if (b.userId !== 'house_pot') ids.add(b.userId);
     });
     return ids.size;
@@ -86,7 +89,8 @@ export const BetLogModal: React.FC<BetLogModalProps> = ({
   // Outcome bet counts
   const outcomeBetCounts = useMemo(() => {
     const counts: Record<string, { count: number; total: number }> = {};
-    for (const b of contest.bets) {
+    const bets = contest.bets || [];
+    for (const b of bets) {
       if (!counts[b.outcomeId]) counts[b.outcomeId] = { count: 0, total: 0 };
       counts[b.outcomeId].count += 1;
       counts[b.outcomeId].total += b.amount;
@@ -135,7 +139,7 @@ export const BetLogModal: React.FC<BetLogModalProps> = ({
 
     const lines: string[] = [];
     lines.push(`Contest Bet Log: "${contest.title}" (${new Date().toLocaleString()})`);
-    lines.push(`Status: ${contest.status.toUpperCase()} | Total Pool: ${contest.totalPool.toLocaleString()} pts | Bets: ${contest.bets.length}`);
+    lines.push(`Status: ${contest.status.toUpperCase()} | Total Pool: ${contest.totalPool.toLocaleString()} pts | Bets: ${(contest.bets || []).length}`);
     lines.push('-'.repeat(60));
 
     filteredBets.forEach(b => {
@@ -336,7 +340,7 @@ export const BetLogModal: React.FC<BetLogModalProps> = ({
                 color: 'var(--text-primary, #5A4A28)',
               }}
             >
-              {contest.bets.length}
+              {(contest.bets || []).length}
             </div>
           </div>
 
@@ -872,7 +876,7 @@ export const BetLogModal: React.FC<BetLogModalProps> = ({
           }}
         >
           <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>
-            Showing <strong>{filteredBets.length}</strong> of <strong>{contest.bets.length}</strong> bets
+            Showing <strong>{filteredBets.length}</strong> of <strong>{(contest.bets || []).length}</strong> bets
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

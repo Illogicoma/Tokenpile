@@ -146,7 +146,7 @@ export const SettingsModal = ({
   const [prizeAddedMsg, setPrizeAddedMsg] = useState(false);
 
   // OBS Studio & Stream Overlay URLs
-  const [copiedKey, setCopiedKey] = useState<'overlay' | 'dock' | 'viewer' | 'panel' | 'dashboard' | null>(null);
+  const [copiedKey, setCopiedKey] = useState<'overlay' | 'dock' | 'viewer' | 'panel' | 'config' | 'dashboard' | null>(null);
 
   const getCleanChannel = () => {
     return twitchConfig.channel ? twitchChatService.cleanChannelName(twitchConfig.channel) : '';
@@ -181,18 +181,24 @@ export const SettingsModal = ({
     return `${getAppBaseUrl()}/panel.html${chan ? `?channel=${chan}` : ''}`;
   };
 
+  const getConfigExtensionUrl = () => {
+    if (typeof window === 'undefined') return '';
+    return `${getAppBaseUrl()}/config.html`;
+  };
+
   const getDashboardExtensionUrl = () => {
     if (typeof window === 'undefined') return '';
     const chan = getCleanChannel();
     return `${getAppBaseUrl()}/dashboard.html${chan ? `?channel=${chan}` : ''}`;
   };
 
-  const handleCopyObsUrl = (type: 'overlay' | 'dock' | 'viewer' | 'panel' | 'dashboard') => {
+  const handleCopyObsUrl = (type: 'overlay' | 'dock' | 'viewer' | 'panel' | 'config' | 'dashboard') => {
     let url = '';
     if (type === 'overlay') url = getOverlayUrl();
     else if (type === 'dock') url = getDockUrl();
     else if (type === 'viewer') url = getViewerUrl();
     else if (type === 'panel') url = getPanelExtensionUrl();
+    else if (type === 'config') url = getConfigExtensionUrl();
     else if (type === 'dashboard') url = getDashboardExtensionUrl();
 
     if (navigator.clipboard) {
@@ -1049,26 +1055,26 @@ export const SettingsModal = ({
                     </code>
                   </div>
 
-                  {/* URL 5: Twitch Live Dashboard Extension URL */}
+                  {/* URL 5: Twitch Broadcaster Configuration URL */}
                   <div className="obs-url-card">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.4rem' }}>
                       <span style={{ fontWeight: 700, fontSize: '0.82rem', color: 'var(--text-primary, #5A4A28)' }}>
-                        🎮 Twitch Live Dashboard URL <span style={{ fontWeight: 400, fontSize: '0.7rem', color: 'var(--text-muted)' }}>(Twitch Developer Console &rarr; Live Dashboard / OBS Custom Dock)</span>
+                        ⚙️ Twitch Extension Configuration URL <span style={{ fontWeight: 400, fontSize: '0.7rem', color: 'var(--text-muted)' }}>(Twitch Developer Console &rarr; Configuration: config.html)</span>
                       </span>
                       <div style={{ display: 'flex', gap: '0.35rem' }}>
                         <button
                           type="button"
                           className="cyber-btn-ghost mini-btn"
-                          onClick={() => handleCopyObsUrl('dashboard')}
+                          onClick={() => handleCopyObsUrl('config')}
                           style={{ fontSize: '0.72rem', padding: '0.25rem 0.6rem' }}
                         >
-                          {copiedKey === 'dashboard' ? <><Check size={12} color="#16a34a" /> Copied!</> : <><Copy size={12} /> Copy Dashboard URL</>}
+                          {copiedKey === 'config' ? <><Check size={12} color="#16a34a" /> Copied!</> : <><Copy size={12} /> Copy Config URL</>}
                         </button>
                         <button
                           type="button"
                           className="cyber-btn-ghost mini-btn"
-                          onClick={() => window.open(getDashboardExtensionUrl(), '_blank')}
-                          title="Preview Live Dashboard in new tab"
+                          onClick={() => window.open(getConfigExtensionUrl(), '_blank')}
+                          title="Preview Configuration view in new tab"
                           style={{ fontSize: '0.72rem', padding: '0.25rem 0.5rem' }}
                         >
                           <ExternalLink size={12} />
@@ -1076,7 +1082,7 @@ export const SettingsModal = ({
                       </div>
                     </div>
                     <code className="obs-url-code">
-                      {getDashboardExtensionUrl()}
+                      {getConfigExtensionUrl()}
                     </code>
                   </div>
 

@@ -77,7 +77,12 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
 
   useEffect(() => {
     const unsubscribe = streamRelayService.onContestUpdate((updatedContest) => {
-      setLiveContest(updatedContest);
+      setLiveContest(prev => ({
+        ...prev,
+        ...updatedContest,
+        bets: updatedContest.bets || prev.bets || [],
+        outcomes: updatedContest.outcomes || prev.outcomes || []
+      }));
     });
     return unsubscribe;
   }, []);
@@ -93,7 +98,8 @@ export const ViewerView: React.FC<ViewerViewProps> = ({
             setLiveContest(prev => ({
               ...prev,
               ...parsed.contest,
-              outcomes: parsed.contest.outcomes || prev.outcomes
+              bets: parsed.contest.bets || prev.bets || [],
+              outcomes: parsed.contest.outcomes || prev.outcomes || []
             }));
           }
         } catch (e) {

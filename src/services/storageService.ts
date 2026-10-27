@@ -1010,7 +1010,14 @@ export const storageService = {
   getContest(): Contest | null {
     try {
       const data = localStorage.getItem(CONTEST_STORAGE_KEY);
-      if (data) return JSON.parse(data);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (parsed) {
+          if (!parsed.bets) parsed.bets = [];
+          if (!parsed.outcomes) parsed.outcomes = [];
+          return parsed;
+        }
+      }
       return null;
     } catch {
       return null;
