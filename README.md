@@ -18,17 +18,14 @@
   - **2D Mode**: Lightweight, ultra-efficient canvas physics powered by Matter.js for potato PCs and minimal CPU usage.
 
 - **👾 Official Twitch Panel & Mobile Page**:
-- **👾 Official Twitch Panel & Mobile Page**:
   - Viewers get a personal, interactive bet slip directly under the stream player without cluttering chat.
   - Supports dark and light Twitch theme mirroring, custom coin previews, and 1-tap Twitch identity verification.
 
-- **📡 Twitch PubSub Synchronisation**:
 - **📡 Twitch PubSub Synchronisation**:
   - Broadcasts contest state, runner odds, and winners to thousands of concurrent viewers using Twitch Extension PubSub.
 
 - **📺 OBS Studio Dual Sync (0ms CEF Shared Engine)**:
   - Transparent 1080p stream overlay runs in OBS as a Browser Source.
-  - Broadcaster controls the entire session from screen interact or OBS Custom Browser Dock via local `BroadcastChannel` with 0ms latency.
   - Broadcaster controls the entire session from screen interact or OBS Custom Browser Dock via local `BroadcastChannel` with 0ms latency.
 
 - **🎨 3D Minted Token Studio**:
@@ -41,24 +38,11 @@
 
 - **🎭 Modular Skin & Sound System**:
   - Easily swap or create custom themes with custom CSS variables, typography, sounds, and contestant presets.
-  - Easily swap or create custom themes with custom CSS variables, typography, sounds, and contestant presets.
 
 ---
 
 ## 🎬 OBS Studio Setup
 
-There's two ways to run this in obs:
-The quickest is to add the URL as a browser source at your desired resolution and use the built in "interact" functionality to directly control the overlay.
-
-## Method A:
-### All in one browser source
-1. In OBS Studio, under **Sources**, click **+** → **Browser Source**.
-2. **Source Name**: `TokenPile Overlay`
-3. **URL**: `https://illogicoma.github.io/Tokenpile/`
-4. **Width**: `1920`, **Height**: `1080`
-5. Check **Shutdown source when not visible** and click **OK**.
-
-## Method B:
 There's two ways to run this in obs:
 The quickest is to add the URL as a browser source at your desired resolution and use the built in "interact" functionality to directly control the overlay.
 
